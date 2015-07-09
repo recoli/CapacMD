@@ -34,7 +34,7 @@ double pbc(double dx, double xbox);
 //========================================
 
 void apply_pbc(const int nMols, const Mol_Info* mol_info, 
-			   double* rx, double* ry, double* rz, double* box);
+               double* rx, double* ry, double* rz, double* box);
 
 //========================================
 // find starting and ending atom/molecule
@@ -42,7 +42,7 @@ void apply_pbc(const int nMols, const Mol_Info* mol_info,
 //========================================
 
 void find_start_end(int* start_group, int* end_group, 
-				    const int total_num, const int num_procs);
+                    const int total_num, const int num_procs);
 
 //========================================
 // find starting and ending atomic pairs
@@ -50,7 +50,7 @@ void find_start_end(int* start_group, int* end_group,
 //========================================
 
 void find_start_end_long(long int* start_group, long int* end_group,
-						 const long int total_num, const int num_procs);
+                         const long int total_num, const int num_procs);
 
 //=============================
 // sum and analyze time_used
@@ -83,7 +83,7 @@ void get_fmax_rms(const int nAtoms, System *p_system);
 //==================================================================================
 
 void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
-				Topol *p_topol, System *p_system);
+                Topol *p_topol, System *p_system);
 
 //==================================================================================
 // RATTLE constraint algorithm for the 2nd half step
@@ -91,13 +91,13 @@ void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 //==================================================================================
 
 void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
-				Topol *p_topol, System *p_system);
+                Topol *p_topol, System *p_system);
 
 //=============================================
 // compute all forces except those from CPIM
 //=============================================
 
 void mpi_force(Task *p_task, Topol *p_topol,
-			   Atom_Info* atom_info, Mol_Info* mol_info, 
-			   RunSet* p_runset, Metal *p_metal, System *p_system,
-			   int my_id, int num_procs, double** time_used);
+               Atom_Info* atom_info, Mol_Info* mol_info, 
+               RunSet* p_runset, Metal *p_metal, System *p_system,
+               int my_id, int num_procs, double** time_used);

@@ -42,23 +42,23 @@
 //========================================================
 
 void mpi_mat_vec_CRS(const int count_nnz, const int n_mat, double *val, long int *col_ind, 
-					 long int *row_ind, double* x, double* Ax)
+                     long int *row_ind, double* x, double* Ax)
 {
-	// zero the Ax vector
-	long int idx;
-	for (idx = 0; idx < n_mat; ++ idx)
-	{
-		Ax[idx] = 0.0;
-	}
+    // zero the Ax vector
+    long int idx;
+    for (idx = 0; idx < n_mat; ++ idx)
+    {
+        Ax[idx] = 0.0;
+    }
 
-	// add contributions to the Ax vector
-	for (idx = 0; idx < count_nnz; ++ idx)
-	{
-		long int irow = row_ind[idx];
-		long int icol = col_ind[idx];
+    // add contributions to the Ax vector
+    for (idx = 0; idx < count_nnz; ++ idx)
+    {
+        long int irow = row_ind[idx];
+        long int icol = col_ind[idx];
 
-		Ax[irow] += val[idx] * x[icol];
-	}
+        Ax[irow] += val[idx] * x[icol];
+    }
 }
 
 //========================================================
@@ -68,7 +68,7 @@ void mpi_mat_vec_CRS(const int count_nnz, const int n_mat, double *val, long int
 //========================================================
 
 void mpi_mat_vec(int start_metal, int end_metal, 
-				 int min_metal, int max_metal, int n_NPs,
+                 int min_metal, int max_metal, int n_NPs,
                  double** A, double* x, double* Ax, int my_id, int num_procs)
 {
     int n_metal = max_metal - min_metal + 1;
@@ -200,7 +200,7 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
     int start = start_metal - min_metal;
     int num = end_metal - start_metal + 1;
 
-	int s1, s2, n1, n2;
+    int s1, s2, n1, n2;
 
     // master: receive data
     if (root_process == my_id)
@@ -250,15 +250,15 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 //======================================================================
 
 void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
-							  int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
-							  int my_id, int num_procs, Metal *p_metal, long int count_nnz)
+                              int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
+                              int my_id, int num_procs, Metal *p_metal, long int count_nnz)
 {
-	double *val;
-	long int *col_ind, *row_ind;
+    double *val;
+    long int *col_ind, *row_ind;
 
-	val = p_metal->val;
-	col_ind = p_metal->col_ind;
-	row_ind = p_metal->row_ind;
+    val = p_metal->val;
+    col_ind = p_metal->col_ind;
+    row_ind = p_metal->row_ind;
 
 
     int n_metal = max_metal - min_metal + 1;
@@ -408,7 +408,7 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      y, my_id, num_procs);
 
-    	mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, y, v);
+        mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, y, v);
 
         // alpha = rho / (r0, v)
         double r0_v;
@@ -453,7 +453,7 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      z, my_id, num_procs);
 
-    	mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, z, t);
+        mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, z, t);
 
         // compute Kt = K * t
         for(i_metal = start_metal; i_metal <= end_metal; i_metal ++)
@@ -532,9 +532,9 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
 
 #ifdef DEBUG
         if(my_id == root_process)
-		{
+        {
             printf("iter= %d, rTr=%e, bTb= %e\n", iter, rTr, bTb);
-		}
+        }
 #endif
 
         if(rTr < criteria)
@@ -550,9 +550,9 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
             if(rTr < criteria * 100.0)
             {
                 if(my_id == root_process)
-				{
+                {
                     printf("Note: Loosen bicg_stab convergence criteria to 1e-6 for this step.\n");
-				}
+                }
 
                 // converged, communicate vec_pq and quit the iteration
                 mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
@@ -563,9 +563,9 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
             {
                 // not converged, terminate the program
                 if(my_id == root_process)
-				{
+                {
                     printf("Error: bicg_stab not converged. rTr= %e, bTb= %e\n", rTr, bTb);
-				}
+                }
 
                 exit(1);
             }

@@ -40,11 +40,11 @@ void pbc_12(Vec_R* ptr_r, const double* box);
 //===========================================================
 
 void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset, 
-					  Atom_Info* atom_info, Topol *p_topol,
-					  System *p_system, int my_id)
+                      Atom_Info* atom_info, Topol *p_topol,
+                      System *p_system, int my_id)
 {
-	int start_metal = p_task->start_metal[my_id];
-	int end_metal   = p_task->end_metal[my_id];
+    int start_metal = p_task->start_metal[my_id];
+    int end_metal   = p_task->end_metal[my_id];
 
     double alpha      = p_runset->w_alpha;
     double a2_sqrtPI  = p_runset->w_a2_sqrtPI;
@@ -52,13 +52,13 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
     double erfc_arCut = p_runset->w_erfc_arCut;
 
 
-	int use_coulomb = p_runset->use_coulomb;
+    int use_coulomb = p_runset->use_coulomb;
 
-	double rCut2 = p_runset->rCut2;
-	double rCut  = p_runset->rCut;
+    double rCut2 = p_runset->rCut2;
+    double rCut  = p_runset->rCut;
 
-	Vec_R rvec, evec;
-	double rij2, rij, qi;
+    Vec_R rvec, evec;
+    double rij2, rij, qi;
     double e_x_metal, e_y_metal, e_z_metal, pot_metal, e_field, v_field;
 
 
@@ -101,11 +101,11 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 
 
             // distance in nm
-			rvec.x = p_system->rx[i_metal] - p_system->rx[i_atom];
-			rvec.y = p_system->ry[i_metal] - p_system->ry[i_atom];
-			rvec.z = p_system->rz[i_metal] - p_system->rz[i_atom];
-			pbc_12(&rvec, p_system->box);
-			rij2 = dist_2(&rvec);
+            rvec.x = p_system->rx[i_metal] - p_system->rx[i_atom];
+            rvec.y = p_system->ry[i_metal] - p_system->ry[i_atom];
+            rvec.z = p_system->rz[i_metal] - p_system->rz[i_atom];
+            pbc_12(&rvec, p_system->box);
+            rij2 = dist_2(&rvec);
 
 
             // electric field and potential in MD unit
@@ -118,7 +118,7 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
             // short-range contribution
             if(rij2 < rCut2)
             {
-            	rij = sqrt(rij2);
+                rij = sqrt(rij2);
 
                 // wolf dampled shifted force
                 if(1 == use_coulomb)
@@ -150,10 +150,10 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 
 
             // convert electric field from MD unit to a.u.
-			scale_vec_2(e_field * conv_fac_e, &rvec, &evec);
-			e_x_metal += evec.x;
-			e_y_metal += evec.y;
-			e_z_metal += evec.z;
+            scale_vec_2(e_field * conv_fac_e, &rvec, &evec);
+            e_x_metal += evec.x;
+            e_y_metal += evec.y;
+            e_z_metal += evec.z;
 
 
             // convert potential energy from MD unit to a.u.
@@ -177,9 +177,9 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
     {
         int iNP;
         for(iNP = 0; iNP < p_metal->n_NPs; iNP ++)
-		{
+        {
             p_metal->vec_ext[p_metal->num * 4 + iNP] = p_metal->cpff_chg[iNP];
-		}
+        }
     }
 
     // no need to gather vec_ext to root processor
@@ -192,30 +192,30 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 //==================================================
 
 void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-							  int my_id, int num_procs, long int *p_count_nnz)
+                              int my_id, int num_procs, long int *p_count_nnz)
 {
-	//double thrshd = 1.0e-05;
+    //double thrshd = 1.0e-05;
 
-	int start_metal = p_task->start_metal[my_id];
-	int end_metal   = p_task->end_metal[my_id];
+    int start_metal = p_task->start_metal[my_id];
+    int end_metal   = p_task->end_metal[my_id];
 
-	double inv_polar = p_metal->inv_polar;
-	double inv_capac = p_metal->inv_capac;
-	double inv_R_pp  = p_metal->inv_R_pp;
-	double inv_R_pq  = p_metal->inv_R_pq;
-	double inv_R_qq  = p_metal->inv_R_qq;
+    double inv_polar = p_metal->inv_polar;
+    double inv_capac = p_metal->inv_capac;
+    double inv_R_pp  = p_metal->inv_R_pp;
+    double inv_R_pq  = p_metal->inv_R_pq;
+    double inv_R_qq  = p_metal->inv_R_qq;
 
-	int min_metal = p_metal->min;
-	int max_metal = p_metal->max;
-	int n_NPs     = p_metal->n_NPs;
+    int min_metal = p_metal->min;
+    int max_metal = p_metal->max;
+    int n_NPs     = p_metal->n_NPs;
 
-	int i_metal, j_metal, iNP, i, j, a, b;
+    int i_metal, j_metal, iNP, i, j, a, b;
 
 
     // the delta function
     double delta[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
-	Vec_R rvec;
+    Vec_R rvec;
 
     const int root_process = 0;
 
@@ -227,45 +227,45 @@ void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, do
     //=======================================================================
 
 
-	long int count_nnz = 0;
-	
-	// i_metal loops over local metal atoms on each processor
-	for (i_metal = start_metal; i_metal <= end_metal; ++ i_metal)
+    long int count_nnz = 0;
+    
+    // i_metal loops over local metal atoms on each processor
+    for (i_metal = start_metal; i_metal <= end_metal; ++ i_metal)
     {
         i = i_metal - min_metal;
 
-		// j_metal loops over all metal atoms
+        // j_metal loops over all metal atoms
         for (j_metal = min_metal; j_metal <= max_metal; ++ j_metal)
         {
             j = j_metal - min_metal;
 
-			double r[3], rij2, rij;
-			double exp_rijRpp2, inv_Rpp3, const_1, const_2, exp__rijRpq2, const_3;
+            double r[3], rij2, rij;
+            double exp_rijRpp2, inv_Rpp3, const_1, const_2, exp__rijRpq2, const_3;
 
-			if (j != i)
-			{
-				rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
-				rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
-				rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
-				pbc_12(&rvec, p_system->box);
-				scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
+            if (j != i)
+            {
+                rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
+                rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
+                rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
+                pbc_12(&rvec, p_system->box);
+                scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
 
 
-				rij2 = dist_2(&rvec);
-				rij  = sqrt(rij2);
+                rij2 = dist_2(&rvec);
+                rij  = sqrt(rij2);
 
                 r[0] = rvec.x;
                 r[1] = rvec.y;
                 r[2] = rvec.z;
 
 
-				exp_rijRpp2 = exp(-(rij2 * inv_R_pp * inv_R_pp));
-				inv_Rpp3 = pow(inv_R_pp, 3.0);
+                exp_rijRpp2 = exp(-(rij2 * inv_R_pp * inv_R_pp));
+                inv_Rpp3 = pow(inv_R_pp, 3.0);
                 
-				const_1 = 1.0 / pow(rij, 5.0) * 
-				 		 (erf(rij * inv_R_pp) - 
-				 		  2.0 * INV_SQRT_PI * inv_R_pp * rij * exp_rijRpp2);
-				const_2 = 4.0 * INV_SQRT_PI * inv_Rpp3 / rij2 * exp_rijRpp2;
+                const_1 = 1.0 / pow(rij, 5.0) * 
+                          (erf(rij * inv_R_pp) - 
+                           2.0 * INV_SQRT_PI * inv_R_pp * rij * exp_rijRpp2);
+                const_2 = 4.0 * INV_SQRT_PI * inv_Rpp3 / rij2 * exp_rijRpp2;
 
 
                 exp__rijRpq2 = exp(-(rij2 * inv_R_pq * inv_R_pq));
@@ -273,137 +273,137 @@ void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, do
                 const_3 = 1.0 / pow(rij, 3.0) * 
                           (erf(rij * inv_R_pq) - 
                            2.0 * INV_SQRT_PI * inv_R_pq * rij * exp__rijRpq2);
-			}
+            }
     
 
-			// submatrix [A -M 0]: row from start_metal * 3 to end_metal * 3
-			for (a = 0; a < DIM; ++ a)
-			{
-				// submatrix Aij, dimension 3x3
-				for (b = 0; b < DIM; ++ b)
-				{
-					if (j == i)
-					{
-						if (b == a)
-						{
-							double element = inv_polar;
-							if (fabs(element) > THRSHD_P)
-							{
-								++ count_nnz;
-							}
-						}
-					}
-					else
-					{
-						double element =
-							-(const_1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) -
-							  const_2 * r[a] * r[b]);
-						if (fabs(element) > THRSHD_P)
-						{
-							++ count_nnz;
-						}
-					}
-
-				}
-
-				// submatrix -Mij, dimension 3x1
-				{
-					if (j != i)
-					{
-                    	// -Mij for mu_i - q_j interaction
-						double element = const_3 * r[a];
-						if (fabs(element) > THRSHD_M)
-						{
-							++ count_nnz;
-						}
-					}
-				}
-
-				// submatrix 0, do nothing
-			
-			}
-
-			// submatrix [-M^T -C 1_or_0]: row from n_metal*3 + start_metal to n_metal*3 + end_metal
-			{
-				// submatrix -Mij^T, dimension 1x3
-                for(b = 0; b < 3; ++ b)
-				{
-					if (j != i)
-					{
-						// -Mji for mu_j - q_i interaction
-						double element = -const_3 * r[b];
-						if (fabs(element) > THRSHD_M)
-						{
-							++ count_nnz;
-						}
-					}
-				}
-
-				// submatrix -Cij, dimension 1x1
-				if (j == i)
-				{
-					double element = -inv_capac;
-					if (fabs(element) > THRSHD_Q)
-					{
-						++ count_nnz;
-					}
-				}
-				else
-				{
-                	double element = -erf(rij * inv_R_qq) / rij;
-					if (fabs(element) > THRSHD_Q)
-					{
-						++ count_nnz;
-					}
-				}
-
-				// submatrix 1_or_0, Lagrangian part, dimension 1 x n_NPs
-				if (min_metal == j_metal)
-				{
-					for(iNP = 0; iNP < n_NPs; ++ iNP)
-					{
-						if (i_metal >= p_metal->start_NP[iNP] && 
-							i_metal <= p_metal->end_NP[iNP])
-						{
-							double element = 1.0;
-							if (fabs(element) > THRSHD_Q)
-							{
-								++ count_nnz;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// submatrix [0 1_or_0 0]
-	// dimension n_NPs x 1 for each metal atom
-	// saved on root processor
-	if (root_process == my_id)
-	{
-		for(iNP = 0; iNP < n_NPs; ++ iNP)
-		{
-			// note: on root processor, i_metal loops over all metal atoms
-			for (i_metal = min_metal; i_metal <= max_metal; ++ i_metal)
+            // submatrix [A -M 0]: row from start_metal * 3 to end_metal * 3
+            for (a = 0; a < DIM; ++ a)
             {
-				if (i_metal >= p_metal->start_NP[iNP] && 
-					i_metal <= p_metal->end_NP[iNP])
-				{
-					double element = 1.0;
-					if (fabs(element) > THRSHD_Q)
-					{
-						++ count_nnz;
-					}
-				}
-			}
-		}
-	}
+                // submatrix Aij, dimension 3x3
+                for (b = 0; b < DIM; ++ b)
+                {
+                    if (j == i)
+                    {
+                        if (b == a)
+                        {
+                            double element = inv_polar;
+                            if (fabs(element) > THRSHD_P)
+                            {
+                                ++ count_nnz;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        double element =
+                            -(const_1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) -
+                              const_2 * r[a] * r[b]);
+                        if (fabs(element) > THRSHD_P)
+                        {
+                            ++ count_nnz;
+                        }
+                    }
+
+                }
+
+                // submatrix -Mij, dimension 3x1
+                {
+                    if (j != i)
+                    {
+                        // -Mij for mu_i - q_j interaction
+                        double element = const_3 * r[a];
+                        if (fabs(element) > THRSHD_M)
+                        {
+                            ++ count_nnz;
+                        }
+                    }
+                }
+
+                // submatrix 0, do nothing
+            
+            }
+
+            // submatrix [-M^T -C 1_or_0]: row from n_metal*3 + start_metal to n_metal*3 + end_metal
+            {
+                // submatrix -Mij^T, dimension 1x3
+                for(b = 0; b < 3; ++ b)
+                {
+                    if (j != i)
+                    {
+                        // -Mji for mu_j - q_i interaction
+                        double element = -const_3 * r[b];
+                        if (fabs(element) > THRSHD_M)
+                        {
+                            ++ count_nnz;
+                        }
+                    }
+                }
+
+                // submatrix -Cij, dimension 1x1
+                if (j == i)
+                {
+                    double element = -inv_capac;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        ++ count_nnz;
+                    }
+                }
+                else
+                {
+                    double element = -erf(rij * inv_R_qq) / rij;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        ++ count_nnz;
+                    }
+                }
+
+                // submatrix 1_or_0, Lagrangian part, dimension 1 x n_NPs
+                if (min_metal == j_metal)
+                {
+                    for(iNP = 0; iNP < n_NPs; ++ iNP)
+                    {
+                        if (i_metal >= p_metal->start_NP[iNP] && 
+                            i_metal <= p_metal->end_NP[iNP])
+                        {
+                            double element = 1.0;
+                            if (fabs(element) > THRSHD_Q)
+                            {
+                                ++ count_nnz;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // submatrix [0 1_or_0 0]
+    // dimension n_NPs x 1 for each metal atom
+    // saved on root processor
+    if (root_process == my_id)
+    {
+        for(iNP = 0; iNP < n_NPs; ++ iNP)
+        {
+            // note: on root processor, i_metal loops over all metal atoms
+            for (i_metal = min_metal; i_metal <= max_metal; ++ i_metal)
+            {
+                if (i_metal >= p_metal->start_NP[iNP] && 
+                    i_metal <= p_metal->end_NP[iNP])
+                {
+                    double element = 1.0;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        ++ count_nnz;
+                    }
+                }
+            }
+        }
+    }
 
     // no need to gather mat_relay on root processor
     // mat_relay will stay distributed on each proc for subsequent mpi_bicg_stab
 
-	*p_count_nnz = count_nnz;
+    *p_count_nnz = count_nnz;
 }
 
 
@@ -412,31 +412,31 @@ void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, do
 //==================================================
 
 void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-							int my_id, int num_procs)
+                            int my_id, int num_procs)
 {
-	//double thrshd = 1.0e-05;
+    //double thrshd = 1.0e-05;
 
-	int start_metal = p_task->start_metal[my_id];
-	int end_metal   = p_task->end_metal[my_id];
+    int start_metal = p_task->start_metal[my_id];
+    int end_metal   = p_task->end_metal[my_id];
 
-	double inv_polar = p_metal->inv_polar;
-	double inv_capac = p_metal->inv_capac;
-	double inv_R_pp  = p_metal->inv_R_pp;
-	double inv_R_pq  = p_metal->inv_R_pq;
-	double inv_R_qq  = p_metal->inv_R_qq;
+    double inv_polar = p_metal->inv_polar;
+    double inv_capac = p_metal->inv_capac;
+    double inv_R_pp  = p_metal->inv_R_pp;
+    double inv_R_pq  = p_metal->inv_R_pq;
+    double inv_R_qq  = p_metal->inv_R_qq;
 
-	int min_metal = p_metal->min;
-	int max_metal = p_metal->max;
-	int n_metal   = p_metal->num;
-	int n_NPs     = p_metal->n_NPs;
+    int min_metal = p_metal->min;
+    int max_metal = p_metal->max;
+    int n_metal   = p_metal->num;
+    int n_NPs     = p_metal->n_NPs;
 
-	int i_metal, j_metal, iNP, i, j, a, b;
+    int i_metal, j_metal, iNP, i, j, a, b;
 
 
     // the delta function
     double delta[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
-	Vec_R rvec;
+    Vec_R rvec;
 
     const int root_process = 0;
 
@@ -447,46 +447,46 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
     // !!!!!
     //=======================================================================
     
-	long int count_nnz = 0;
-	long int irow, icol;
+    long int count_nnz = 0;
+    long int irow, icol;
 
-	// i_metal loops over local metal atoms on each processor
-	for (i_metal = start_metal; i_metal <= end_metal; ++ i_metal)
+    // i_metal loops over local metal atoms on each processor
+    for (i_metal = start_metal; i_metal <= end_metal; ++ i_metal)
     {
         i = i_metal - min_metal;
 
-		// j_metal loops over all metal atoms
+        // j_metal loops over all metal atoms
         for (j_metal = min_metal; j_metal <= max_metal; ++ j_metal)
         {
             j = j_metal - min_metal;
 
-			double r[3], rij2, rij;
-			double exp_rijRpp2, inv_Rpp3, const_1, const_2, exp__rijRpq2, const_3;
+            double r[3], rij2, rij;
+            double exp_rijRpp2, inv_Rpp3, const_1, const_2, exp__rijRpq2, const_3;
 
-			if (j != i)
-			{
-				rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
-				rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
-				rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
-				pbc_12(&rvec, p_system->box);
-				scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
+            if (j != i)
+            {
+                rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
+                rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
+                rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
+                pbc_12(&rvec, p_system->box);
+                scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
 
 
-				rij2 = dist_2(&rvec);
-				rij  = sqrt(rij2);
+                rij2 = dist_2(&rvec);
+                rij  = sqrt(rij2);
 
                 r[0] = rvec.x;
                 r[1] = rvec.y;
                 r[2] = rvec.z;
 
 
-				exp_rijRpp2 = exp(-(rij2 * inv_R_pp * inv_R_pp));
-				inv_Rpp3 = pow(inv_R_pp, 3.0);
+                exp_rijRpp2 = exp(-(rij2 * inv_R_pp * inv_R_pp));
+                inv_Rpp3 = pow(inv_R_pp, 3.0);
                 
-				const_1 = 1.0 / pow(rij, 5.0) * 
-				 		 (erf(rij * inv_R_pp) - 
-				 		  2.0 * INV_SQRT_PI * inv_R_pp * rij * exp_rijRpp2);
-				const_2 = 4.0 * INV_SQRT_PI * inv_Rpp3 / rij2 * exp_rijRpp2;
+                const_1 = 1.0 / pow(rij, 5.0) * 
+                          (erf(rij * inv_R_pp) - 
+                           2.0 * INV_SQRT_PI * inv_R_pp * rij * exp_rijRpp2);
+                const_2 = 4.0 * INV_SQRT_PI * inv_Rpp3 / rij2 * exp_rijRpp2;
 
 
                 exp__rijRpq2 = exp(-(rij2 * inv_R_pq * inv_R_pq));
@@ -494,192 +494,192 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                 const_3 = 1.0 / pow(rij, 3.0) * 
                           (erf(rij * inv_R_pq) - 
                            2.0 * INV_SQRT_PI * inv_R_pq * rij * exp__rijRpq2);
-			}
+            }
     
 
-			// submatrix [A -M 0]: row from start_metal * 3 to end_metal * 3
-			for (a = 0; a < DIM; ++ a)
-			{
-				irow = i * 3 + a;
+            // submatrix [A -M 0]: row from start_metal * 3 to end_metal * 3
+            for (a = 0; a < DIM; ++ a)
+            {
+                irow = i * 3 + a;
 
-				// submatrix Aij, dimension 3x3
-				for (b = 0; b < DIM; ++ b)
-				{
-					icol = j * 3 + b;
+                // submatrix Aij, dimension 3x3
+                for (b = 0; b < DIM; ++ b)
+                {
+                    icol = j * 3 + b;
 
-					if (j == i)
-					{
-						if (b == a)
-						{
-							double element = inv_polar;
+                    if (j == i)
+                    {
+                        if (b == a)
+                        {
+                            double element = inv_polar;
 
-							p_metal->diag_relay[irow] = element;
+                            p_metal->diag_relay[irow] = element;
 
-							if (fabs(element) > THRSHD_P)
-							{
-								p_metal->val[count_nnz] = element;
-								p_metal->col_ind[count_nnz] = icol;
-								p_metal->row_ind[count_nnz] = irow;
+                            if (fabs(element) > THRSHD_P)
+                            {
+                                p_metal->val[count_nnz] = element;
+                                p_metal->col_ind[count_nnz] = icol;
+                                p_metal->row_ind[count_nnz] = irow;
 
-								++ count_nnz;
-							}
-						}
-					}
-					else
-					{
-						double element =
-							-(const_1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) -
-							  const_2 * r[a] * r[b]);
+                                ++ count_nnz;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        double element =
+                            -(const_1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) -
+                              const_2 * r[a] * r[b]);
 
-						if (fabs(element) > THRSHD_P)
-						{
-							p_metal->val[count_nnz] = element;
-							p_metal->col_ind[count_nnz] = icol;
-							p_metal->row_ind[count_nnz] = irow;
+                        if (fabs(element) > THRSHD_P)
+                        {
+                            p_metal->val[count_nnz] = element;
+                            p_metal->col_ind[count_nnz] = icol;
+                            p_metal->row_ind[count_nnz] = irow;
                         
-							++ count_nnz;
-						}
-					}
+                            ++ count_nnz;
+                        }
+                    }
 
-				}
+                }
 
-				// submatrix -Mij, dimension 3x1
-				icol = n_metal * 3 + j;
-				{
-					if (j != i)
-					{
-                    	// -Mij for mu_i - q_j interaction
-						double element = const_3 * r[a];
+                // submatrix -Mij, dimension 3x1
+                icol = n_metal * 3 + j;
+                {
+                    if (j != i)
+                    {
+                        // -Mij for mu_i - q_j interaction
+                        double element = const_3 * r[a];
 
-						if (fabs(element) > THRSHD_M)
-						{
-							p_metal->val[count_nnz] = element;
-							p_metal->col_ind[count_nnz] = icol;
-							p_metal->row_ind[count_nnz] = irow;
+                        if (fabs(element) > THRSHD_M)
+                        {
+                            p_metal->val[count_nnz] = element;
+                            p_metal->col_ind[count_nnz] = icol;
+                            p_metal->row_ind[count_nnz] = irow;
                         
-							++ count_nnz;
-						}
-					}
-				}
+                            ++ count_nnz;
+                        }
+                    }
+                }
 
-				// submatrix 0, do nothing
-			
-			}
+                // submatrix 0, do nothing
+            
+            }
 
-			// submatrix [-M^T -C 1_or_0]: row from n_metal*3 + start_metal to n_metal*3 + end_metal
-			irow = n_metal*3 + i;
-			{
-				// submatrix -Mij^T, dimension 1x3
+            // submatrix [-M^T -C 1_or_0]: row from n_metal*3 + start_metal to n_metal*3 + end_metal
+            irow = n_metal*3 + i;
+            {
+                // submatrix -Mij^T, dimension 1x3
                 for(b = 0; b < 3; ++ b)
-				{
-					icol = j * 3 + b;
+                {
+                    icol = j * 3 + b;
 
-					if (j != i)
-					{
-						// -Mji for mu_j - q_i interaction
-						double element = -const_3 * r[b];
+                    if (j != i)
+                    {
+                        // -Mji for mu_j - q_i interaction
+                        double element = -const_3 * r[b];
 
-						if (fabs(element) > THRSHD_M)
-						{
-							p_metal->val[count_nnz] = element;
-							p_metal->col_ind[count_nnz] = icol;
-							p_metal->row_ind[count_nnz] = irow;
+                        if (fabs(element) > THRSHD_M)
+                        {
+                            p_metal->val[count_nnz] = element;
+                            p_metal->col_ind[count_nnz] = icol;
+                            p_metal->row_ind[count_nnz] = irow;
                         
-							++ count_nnz;
-						}
-					}
-				}
+                            ++ count_nnz;
+                        }
+                    }
+                }
 
-				// submatrix -Cij, dimension 1x1
-				icol = n_metal * 3 + j;
-				if (j == i)
-				{
-					double element = -inv_capac;
+                // submatrix -Cij, dimension 1x1
+                icol = n_metal * 3 + j;
+                if (j == i)
+                {
+                    double element = -inv_capac;
 
-					p_metal->diag_relay[irow] = element;
+                    p_metal->diag_relay[irow] = element;
 
-					if (fabs(element) > THRSHD_Q)
-					{
-						p_metal->val[count_nnz] = element;
-						p_metal->col_ind[count_nnz] = icol;
-						p_metal->row_ind[count_nnz] = irow;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        p_metal->val[count_nnz] = element;
+                        p_metal->col_ind[count_nnz] = icol;
+                        p_metal->row_ind[count_nnz] = irow;
                     
-						++ count_nnz;
-					}
-				}
-				else
-				{
-                	double element = -erf(rij * inv_R_qq) / rij;
+                        ++ count_nnz;
+                    }
+                }
+                else
+                {
+                    double element = -erf(rij * inv_R_qq) / rij;
 
-					if (fabs(element) > THRSHD_Q)
-					{
-						p_metal->val[count_nnz] = element;
-						p_metal->col_ind[count_nnz] = icol;
-						p_metal->row_ind[count_nnz] = irow;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        p_metal->val[count_nnz] = element;
+                        p_metal->col_ind[count_nnz] = icol;
+                        p_metal->row_ind[count_nnz] = irow;
                     
-						++ count_nnz;
-					}
-				}
+                        ++ count_nnz;
+                    }
+                }
 
-				// submatrix 1_or_0, Lagrangian part, dimension 1 x n_NPs
-				if (min_metal == j_metal)
-				{
-					for(iNP = 0; iNP < n_NPs; ++ iNP)
-					{
-						icol = n_metal * 4 + iNP;
+                // submatrix 1_or_0, Lagrangian part, dimension 1 x n_NPs
+                if (min_metal == j_metal)
+                {
+                    for(iNP = 0; iNP < n_NPs; ++ iNP)
+                    {
+                        icol = n_metal * 4 + iNP;
 
-						if (i_metal >= p_metal->start_NP[iNP] && 
-							i_metal <= p_metal->end_NP[iNP])
-						{
-							double element = 1.0;
+                        if (i_metal >= p_metal->start_NP[iNP] && 
+                            i_metal <= p_metal->end_NP[iNP])
+                        {
+                            double element = 1.0;
 
-							if (fabs(element) > THRSHD_Q)
-							{
-								p_metal->val[count_nnz] = element;
-								p_metal->col_ind[count_nnz] = icol;
-								p_metal->row_ind[count_nnz] = irow;
+                            if (fabs(element) > THRSHD_Q)
+                            {
+                                p_metal->val[count_nnz] = element;
+                                p_metal->col_ind[count_nnz] = icol;
+                                p_metal->row_ind[count_nnz] = irow;
                             
-								++ count_nnz;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+                                ++ count_nnz;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	// submatrix [0 1_or_0 0]
-	// dimension n_NPs x 1 for each metal atom
-	// saved on root processor
-	if (root_process == my_id)
-	{
-		for(iNP = 0; iNP < n_NPs; ++ iNP)
-		{
-			irow = n_metal * 4 + iNP;
+    // submatrix [0 1_or_0 0]
+    // dimension n_NPs x 1 for each metal atom
+    // saved on root processor
+    if (root_process == my_id)
+    {
+        for(iNP = 0; iNP < n_NPs; ++ iNP)
+        {
+            irow = n_metal * 4 + iNP;
 
-			// note: on root processor, i_metal loops over all metal atoms
-			for (i_metal = min_metal; i_metal <= max_metal; ++ i_metal)
+            // note: on root processor, i_metal loops over all metal atoms
+            for (i_metal = min_metal; i_metal <= max_metal; ++ i_metal)
             {
                 i = i_metal - min_metal;
-				icol = n_metal * 3 + i;
+                icol = n_metal * 3 + i;
 
-				if (i_metal >= p_metal->start_NP[iNP] && 
-					i_metal <= p_metal->end_NP[iNP])
-				{
-					double element = 1.0;
+                if (i_metal >= p_metal->start_NP[iNP] && 
+                    i_metal <= p_metal->end_NP[iNP])
+                {
+                    double element = 1.0;
 
-					if (fabs(element) > THRSHD_Q)
-					{
-						p_metal->val[count_nnz] = element;
-						p_metal->col_ind[count_nnz] = icol;
-						p_metal->row_ind[count_nnz] = irow;
+                    if (fabs(element) > THRSHD_Q)
+                    {
+                        p_metal->val[count_nnz] = element;
+                        p_metal->col_ind[count_nnz] = icol;
+                        p_metal->row_ind[count_nnz] = irow;
                     
-						++ count_nnz;
-					}
-				}
-			}
-		}
-	}
+                        ++ count_nnz;
+                    }
+                }
+            }
+        }
+    }
 
     // no need to gather mat_relay on root processor
     // mat_relay will stay distributed on each proc for subsequent mpi_bicg_stab
@@ -694,8 +694,8 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                     System *p_system, double* vec_pq,
                     int nAtoms, Atom_Info* atom_info, int my_id)
 {
-	int start_metal = p_task->start_metal[my_id];
-	int end_metal   = p_task->end_metal[my_id];
+    int start_metal = p_task->start_metal[my_id];
+    int end_metal   = p_task->end_metal[my_id];
 
     double alpha      = p_runset->w_alpha;
     double a2_sqrtPI  = p_runset->w_a2_sqrtPI;
@@ -703,29 +703,29 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
     double erfc_arCut = p_runset->w_erfc_arCut;
 
 
-	int use_coulomb = p_runset->use_coulomb;
+    int use_coulomb = p_runset->use_coulomb;
 
-	double rCut2 = p_runset->rCut2;
-	double rCut  = p_runset->rCut;
+    double rCut2 = p_runset->rCut2;
+    double rCut  = p_runset->rCut;
 
-	double inv_polar = p_metal->inv_polar;
-	double inv_capac = p_metal->inv_capac;
-	double inv_R_pp  = p_metal->inv_R_pp;
-	double inv_R_pq  = p_metal->inv_R_pq;
-	double inv_R_qq  = p_metal->inv_R_qq;
+    double inv_polar = p_metal->inv_polar;
+    double inv_capac = p_metal->inv_capac;
+    double inv_R_pp  = p_metal->inv_R_pp;
+    double inv_R_pq  = p_metal->inv_R_pq;
+    double inv_R_qq  = p_metal->inv_R_qq;
 
-	int min_metal = p_metal->min;
-	int max_metal = p_metal->max;
-	int n_metal   = p_metal->num;
+    int min_metal = p_metal->min;
+    int max_metal = p_metal->max;
+    int n_metal   = p_metal->num;
 
 
-	Vec_R rvec;
+    Vec_R rvec;
 
     // the delta function
     double delta[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
     int i_metal, j_metal, i_atom, a, b, c;
-	double rij2, rij, qi, qj, const_a0, const_a1, const_b1, const_c1;
+    double rij2, rij, qi, qj, const_a0, const_a1, const_b1, const_c1;
     double erfc_arij, exp__a2rij2;
 
     //=======================================================================
@@ -753,11 +753,11 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
 
 
             // distances in nm
-			rvec.x = p_system->rx[i_metal] - p_system->rx[i_atom];
-			rvec.y = p_system->ry[i_metal] - p_system->ry[i_atom];
-			rvec.z = p_system->rz[i_metal] - p_system->rz[i_atom];
-			pbc_12(&rvec, p_system->box);
-			rij2 = dist_2(&rvec);
+            rvec.x = p_system->rx[i_metal] - p_system->rx[i_atom];
+            rvec.y = p_system->ry[i_metal] - p_system->ry[i_atom];
+            rvec.z = p_system->rz[i_metal] - p_system->rz[i_atom];
+            pbc_12(&rvec, p_system->box);
+            rij2 = dist_2(&rvec);
 
 
             if(rij2 < rCut2)
@@ -768,7 +768,7 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                 // qj: induced charge of metal atom
                 qi = atom_info[i_atom].charge;
 
-        		const int j = i_metal - min_metal;
+                const int j = i_metal - min_metal;
                 qj = vec_pq[n_metal * 3 + j];
 
                 double r[3] = {rvec.x, rvec.y, rvec.z};
@@ -784,7 +784,7 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
 
 
                 // const_a0 in nm^-3
-				// note: const_a0 will also be used to compute the potential of
+                // note: const_a0 will also be used to compute the potential of
                 // CPFF metal dipole - non-metal charge interaction
                 const_a0 = 0.0;
 
@@ -798,9 +798,9 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                                 a2_sqrtPI * exp__a2rij2 / rij - wolfConst) / rij;
 
                     for(a = 0; a < 3; a ++)
-					{
+                    {
                         f[a] += const_a0 * r[a] * FQQ * qi * qj;
-					}
+                    }
 
                     // potential[10] = CPFF metal charge - non-metal charge
                     p_system->potential[10] += FQQ * qi * qj * 
@@ -812,9 +812,9 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                     const_a0 = 1.0 / (rij2 * rij);
 
                     for(a = 0; a < 3; a ++)
-					{
+                    {
                         f[a] += const_a0 * r[a] * FQQ * qi * qj;
-					}
+                    }
 
                     p_system->potential[10] += FQQ * qi * qj / rij;
                 }
@@ -832,7 +832,7 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                 // !!!NOTE: convert dipole moment from a.u.(ea0) to (e nm)
                 
                 
-				if(1 == use_coulomb)
+                if(1 == use_coulomb)
                 {
                     const_a1 = 1.0 / pow(rij, 5.0) *  
                                (erfc_arij + a2_sqrtPI * rij * exp__a2rij2);
@@ -840,35 +840,35 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
                     const_c1 = wolfConst / pow(rij, 3.0);
 
                     for(a = 0; a < 3; a ++)
-					{
+                    {
                         for(b = 0; b < 3; b ++)
-						{
+                        {
                             f[b] += -(const_a1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) +
                                       const_b1 * r[a] * r[b] -
                                       const_c1 * (r[a] * r[b] - delta[a][b] * rij2)) *
                                      FQQ * qi * vec_pq[j * 3 + a] / NM2BOHR;
-						}
-					}
+                        }
+                    }
                 }
 
                 else if(0 == use_coulomb)
                 {
                     for(a = 0; a < 3; a ++)
-					{
+                    {
                         for(b = 0; b < 3; b ++)
-						{
+                        {
                             f[b] += -((3.0 * r[a] * r[b] - delta[a][b] * rij2) / pow(rij, 5.0)) *
                                      FQQ * qi * vec_pq[j * 3 + a] / NM2BOHR;
-						}
-					}
+                        }
+                    }
                 }
 
                 // potential[11] = CPFF metal dipole - non-metal charge
                 for(a = 0; a < 3; a ++)
-				{
+                {
                     p_system->potential[11] += -FQQ * qi * vec_pq[j * 3 + a] / NM2BOHR *
                                       const_a0 * r[a];
-				}
+                }
 
                 p_system->fx[i_metal] += f[0];
                 p_system->fy[i_metal] += f[1];
@@ -934,14 +934,14 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
 
 
             // distances 
-			rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
-			rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
-			rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
-			pbc_12(&rvec, p_system->box);
-			scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
+            rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
+            rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
+            rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
+            pbc_12(&rvec, p_system->box);
+            scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
 
 
-			rij2 = dist_2(&rvec);
+            rij2 = dist_2(&rvec);
 
 
             rij = sqrt(rij2);

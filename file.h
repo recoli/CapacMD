@@ -40,14 +40,14 @@ void read_settings(char* input_mdset, RunSet* p_runset, Metal* p_metal);
 //=====================
 
 void read_gro(char* input_gro, System *p_system,
-			  int* ptr_nAtoms, Atom_Info* atom_info);
+              int* ptr_nAtoms, Atom_Info* atom_info);
 
 //========================
 // write to traj.gro file
 //========================
 
 void write_gro(FILE* file_gro, System *p_system,
-			   int nAtoms, Atom_Info* atom_info, int step);
+               int nAtoms, Atom_Info* atom_info, int step);
 
 //================================================
 // write metal dipole-charge vector to vec_pq.txt
@@ -78,4 +78,4 @@ void read_param_2(char* input_param, Topol *p_topol, Metal *p_metal);
 //=============================================
 
 void assign_indices(Topol *p_topol, Metal *p_metal,
-					Atom_Info* atom_info, Mol_Info* mol_info);
+                    Atom_Info* atom_info, Mol_Info* mol_info);

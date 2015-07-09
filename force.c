@@ -49,16 +49,16 @@ double dist_2(const Vec_R* ptr_r)
 
 void scale_vec_1(const double ss, Vec_R* ptr_rvec)
 {
-	ptr_rvec->x *= ss;
-	ptr_rvec->y *= ss;
-	ptr_rvec->z *= ss;
+    ptr_rvec->x *= ss;
+    ptr_rvec->y *= ss;
+    ptr_rvec->z *= ss;
 }
 
 void scale_vec_2(const double fij, const Vec_R* ptr_rvec, Vec_R* ptr_fvec)
 {
-	ptr_fvec->x = fij * ptr_rvec->x;
-	ptr_fvec->y = fij * ptr_rvec->y;
-	ptr_fvec->z = fij * ptr_rvec->z;
+    ptr_fvec->x = fij * ptr_rvec->x;
+    ptr_fvec->y = fij * ptr_rvec->y;
+    ptr_fvec->z = fij * ptr_rvec->z;
 }
 
 //==================================
@@ -66,7 +66,7 @@ void scale_vec_2(const double fij, const Vec_R* ptr_rvec, Vec_R* ptr_fvec)
 //==================================
 
 void virial_rvec_fvec_half(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec, 
-						   double** virial)
+                           double** virial)
 {
     virial[0][0] -= ptr_rvec->x * ptr_fvec->x * 0.5;
     virial[0][1] -= ptr_rvec->x * ptr_fvec->y * 0.5;
@@ -82,7 +82,7 @@ void virial_rvec_fvec_half(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec,
 }
 
 void virial_rvec_fvec_full(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec, 
-						   double** virial)
+                           double** virial)
 {
     virial[0][0] -= ptr_rvec->x * ptr_fvec->x;
     virial[0][1] -= ptr_rvec->x * ptr_fvec->y;
@@ -289,11 +289,11 @@ void analyze_time_used(double** time_used, const int num_procs)
 
         aver_time[it] /= num_procs;
 
-		// skip evaluation of imbalance for very short time usage
-		if(aver_time[it] > 0.1)
-		{
-        	imbalance[it] = (max_time[it] / aver_time[it] - 1.0) * 100.0;
-		}
+        // skip evaluation of imbalance for very short time usage
+        if(aver_time[it] > 0.1)
+        {
+            imbalance[it] = (max_time[it] / aver_time[it] - 1.0) * 100.0;
+        }
     }
 
     printf ("    Total time used in force: %.3f seconds  Imb. %.1f%%\n", aver_time[0], imbalance[0]);
@@ -366,8 +366,8 @@ void get_fmax_rms(const int nAtoms, System *p_system)
     for (i = 0; i < nAtoms; ++ i)
     {
         double f2 = p_system->fx[i] * p_system->fx[i] + 
-					p_system->fy[i] * p_system->fy[i] + 
-					p_system->fz[i] * p_system->fz[i];
+                    p_system->fy[i] * p_system->fy[i] + 
+                    p_system->fz[i] * p_system->fz[i];
 
         f_rms += f2;
 
@@ -383,13 +383,13 @@ void get_fmax_rms(const int nAtoms, System *p_system)
 //===========================================
 
 void mpi_qsc_dens(Task *p_task, const double rCut2, Metal *p_metal, 
-				  System *p_system, const int my_id, const int num_procs)
+                  System *p_system, const int my_id, const int num_procs)
 {
-	const int start_metal = p_task->start_metal[my_id];
-	const int end_metal   = p_task->end_metal[my_id];
+    const int start_metal = p_task->start_metal[my_id];
+    const int end_metal   = p_task->end_metal[my_id];
 
-	Vec_R rr;
-	double rij2;
+    Vec_R rr;
+    double rij2;
     int i, j;
 
     // compute densities and get inv_sqrt of the densities
@@ -403,11 +403,11 @@ void mpi_qsc_dens(Task *p_task, const double rCut2, Metal *p_metal,
             if (j == i) { continue; }
 
 
-			rr.x = p_system->rx[j] - p_system->rx[i];
-			rr.y = p_system->ry[j] - p_system->ry[i];
-			rr.z = p_system->rz[j] - p_system->rz[i];
-			pbc_12(&rr, p_system->box);
-			rij2 = dist_2(&rr);
+            rr.x = p_system->rx[j] - p_system->rx[i];
+            rr.y = p_system->ry[j] - p_system->ry[i];
+            rr.z = p_system->rz[j] - p_system->rz[i];
+            pbc_12(&rr, p_system->box);
+            rij2 = dist_2(&rr);
 
 
             // using cutoff for Q-SC potential
@@ -466,16 +466,16 @@ void mpi_qsc_dens(Task *p_task, const double rCut2, Metal *p_metal,
 //=========================================
 
 void mpi_qsc_force(Task *p_task, const double rCut2, Metal* p_metal, 
-				   System *p_system, const int my_id)
+                   System *p_system, const int my_id)
 {
-	const int start_metal = p_task->start_metal[my_id];
-	const int end_metal   = p_task->end_metal[my_id];
+    const int start_metal = p_task->start_metal[my_id];
+    const int end_metal   = p_task->end_metal[my_id];
 
     int i_atom, j_atom;
     double rij2, rij; 
     double cm_2, a_rij, a_rij_n, a_rij_m, sum_inv_sqrt, fij;
 
-	Vec_R rvec, fvec;
+    Vec_R rvec, fvec;
 
     // compute forces
     cm_2 = p_metal->qsc_c * p_metal->qsc_m / 2.0;
@@ -491,11 +491,11 @@ void mpi_qsc_force(Task *p_task, const double rCut2, Metal* p_metal,
             int j_metal = j_atom - p_metal->min;
 
 
-			rvec.x = p_system->rx[j_atom] - p_system->rx[i_atom];
-			rvec.y = p_system->ry[j_atom] - p_system->ry[i_atom];
-			rvec.z = p_system->rz[j_atom] - p_system->rz[i_atom];
-			pbc_12(&rvec, p_system->box);
-			rij2 = dist_2(&rvec);
+            rvec.x = p_system->rx[j_atom] - p_system->rx[i_atom];
+            rvec.y = p_system->ry[j_atom] - p_system->ry[i_atom];
+            rvec.z = p_system->rz[j_atom] - p_system->rz[i_atom];
+            pbc_12(&rvec, p_system->box);
+            rij2 = dist_2(&rvec);
 
 
             //===================================================================
@@ -518,8 +518,8 @@ void mpi_qsc_force(Task *p_task, const double rCut2, Metal* p_metal,
                       (p_metal->qsc_n * a_rij_n - cm_2 * sum_inv_sqrt * a_rij_m) / rij2;
 
 
-				// fvec = fij * rvec;
-				scale_vec_2(fij, &rvec, &fvec);
+                // fvec = fij * rvec;
+                scale_vec_2(fij, &rvec, &fvec);
 
 
                 // Note: not using Newton's third law
@@ -529,7 +529,7 @@ void mpi_qsc_force(Task *p_task, const double rCut2, Metal* p_metal,
                 p_system->fz[i_atom] -= fvec.z;
 
                 // virial increment scaled by 0.5
-				virial_rvec_fvec_half(&rvec, &fvec, p_system->virial);
+                virial_rvec_fvec_half(&rvec, &fvec, p_system->virial);
 
 
                 // potential[1] = metal qsc energy
@@ -560,13 +560,13 @@ void zero_vec_nb(Vec_nb* ptr_nonbonded)
 }
 
 void virial_vec_nb(const double rxij, const double ryij, const double rzij,
-					const Vec_nb* ptr_nonbonded, double** virial)
+                    const Vec_nb* ptr_nonbonded, double** virial)
 {
-	double fxij, fyij, fzij;
+    double fxij, fyij, fzij;
 
-	fxij = ptr_nonbonded->lj.fj.x + ptr_nonbonded->qq.fj.x;
-	fyij = ptr_nonbonded->lj.fj.y + ptr_nonbonded->qq.fj.y;
-	fzij = ptr_nonbonded->lj.fj.z + ptr_nonbonded->qq.fj.z;
+    fxij = ptr_nonbonded->lj.fj.x + ptr_nonbonded->qq.fj.x;
+    fyij = ptr_nonbonded->lj.fj.y + ptr_nonbonded->qq.fj.y;
+    fzij = ptr_nonbonded->lj.fj.z + ptr_nonbonded->qq.fj.z;
 
     // update virial
     virial[0][0] -= rxij * fxij;
@@ -592,11 +592,11 @@ void compute_erf_vdw(double rxij, double ryij, double rzij, double rij2,
                      double c6, double c12, double width,
                      double* potential, double** virial, Vec_nb* ptr_nonbonded)
 {
-	double rij6, rij12, cr12, cr6, rR, erf_rR, rij, vij, fij;
+    double rij6, rij12, cr12, cr6, rR, erf_rR, rij, vij, fij;
     rij = sqrt(rij2);
 
     // zero nonbonded force for this i-j pair
-	zero_vec_nb(ptr_nonbonded);
+    zero_vec_nb(ptr_nonbonded);
 
     // vdW contribution
     if (c6!=0.0 || c12!=0.0)
@@ -628,7 +628,7 @@ void compute_erf_vdw(double rxij, double ryij, double rzij, double rij2,
     }
 
     // update virial
-	virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
+    virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
 }
 
 
@@ -640,10 +640,10 @@ void compute_morse(double rxij, double ryij, double rzij, double rij2,
                    double morse_D, double morse_a, double morse_R,
                    double* potential, double** virial, Vec_nb* ptr_nonbonded)
 {
-	double fij, rij, exp__ar, exp__2ar;
+    double fij, rij, exp__ar, exp__2ar;
     rij  = sqrt(rij2);
 
-	zero_vec_nb(ptr_nonbonded);
+    zero_vec_nb(ptr_nonbonded);
 
     // Morse potential
     exp__ar = exp(-morse_a * (rij - morse_R));
@@ -663,7 +663,7 @@ void compute_morse(double rxij, double ryij, double rzij, double rij2,
     ptr_nonbonded->lj.fi.z = -ptr_nonbonded->lj.fj.z;
 
     // update virial
-	virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
+    virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
 }
 
 
@@ -675,10 +675,10 @@ void compute_buckingham(double rxij, double ryij, double rzij, double rij2,
                         double buck_A, double buck_B, double c6,
                         double* potential, double** virial, Vec_nb* ptr_nonbonded)
 {
-	double rij6, rij8, rij, exp__Br, fij;
+    double rij6, rij8, rij, exp__Br, fij;
     rij  = sqrt(rij2);
 
-	zero_vec_nb(ptr_nonbonded);
+    zero_vec_nb(ptr_nonbonded);
 
     // Buckingham potential
     rij6 = rij2 * rij2 * rij2;
@@ -699,7 +699,7 @@ void compute_buckingham(double rxij, double ryij, double rzij, double rij2,
     ptr_nonbonded->lj.fi.z = -ptr_nonbonded->lj.fj.z;
 
     // update virial
-	virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
+    virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
 }
 
 
@@ -708,28 +708,28 @@ void compute_buckingham(double rxij, double ryij, double rzij, double rij2,
 //==========================================
 
 void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
-					   RunSet* p_runset, double scaleLJ, double scaleQQ,
-					   int is_14_pair,
+                       RunSet* p_runset, double scaleLJ, double scaleQQ,
+                       int is_14_pair,
                        double c6, double c12, double qi, double qj,
                        double* potential, double** virial, Vec_nb* ptr_nonbonded)
 {
-	double rij6, rij12, rij, fij;
-	double f_r, f_c, erfc_arij;
+    double rij6, rij12, rij, fij;
+    double f_r, f_c, erfc_arij;
     rij = sqrt(rij2);
-	fij = 0.0; // initialize fij
+    fij = 0.0; // initialize fij
 
-	double rCut, inv_rc12, inv_rc6;
-	rCut     = p_runset->rCut;
-	inv_rc12 = p_runset->inv_rc12;
-	inv_rc6  = p_runset->inv_rc6;
+    double rCut, inv_rc12, inv_rc6;
+    rCut     = p_runset->rCut;
+    inv_rc12 = p_runset->inv_rc12;
+    inv_rc6  = p_runset->inv_rc6;
 
-	double alpha, a2_sqrtPI, wolfConst, erfc_arCut;
+    double alpha, a2_sqrtPI, wolfConst, erfc_arCut;
     alpha      = p_runset->w_alpha;
     a2_sqrtPI  = p_runset->w_a2_sqrtPI;
     wolfConst  = p_runset->w_Const;
     erfc_arCut = p_runset->w_erfc_arCut;
 
-	zero_vec_nb(ptr_nonbonded);
+    zero_vec_nb(ptr_nonbonded);
 
     // vdW contribution
     if (c6!=0.0 || c12!=0.0)
@@ -742,8 +742,8 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
             // The shifted force method for Lennard-Jones potential
             // Ref: Toxvaerd and Dyre, J. Chem. Phys. 2011, 134, 081102
             //      dx.doi.org/10.1063/1.3558787
-			
-			// note: no scaleLJ for non-14 pair!
+            
+            // note: no scaleLJ for non-14 pair!
 
             f_r = 12.0 * c12 / rij12 - 6.0 * c6 / rij6;
             f_c = 12.0 * c12 * inv_rc12 - 6.0 * c6 * inv_rc6;
@@ -782,9 +782,9 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
             // Ref.: Fennell and Gezelter, J. Chem. Phys. 2006, 124, 234104
             //       dx.doi.org/10.1063/1.2206581
 
-			// note: no scaleQQ for non-14 pair!
+            // note: no scaleQQ for non-14 pair!
             
-			erfc_arij = erfc(alpha * rij);
+            erfc_arij = erfc(alpha * rij);
 
             fij = FQQ * qi * qj * 
                   ((erfc_arij / rij2 + 
@@ -812,7 +812,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
     }
 
     // update virial
-	virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
+    virial_vec_nb(rxij, ryij, rzij, ptr_nonbonded, virial);
 }
 
 //==============================================
@@ -995,20 +995,20 @@ Vec_3 compute_angle_1(double rxi, double ryi, double rzi,
     potential[3] += 0.5 * ka * delta_a * delta_a;
 
     // scalar viral from angle-dependent potential is zero
-	// but we add individual contributions anyways
-	// ftp://ftp.dl.ac.uk/ccp5.newsletter/26/pdf/smith.pdf
+    // but we add individual contributions anyways
+    // ftp://ftp.dl.ac.uk/ccp5.newsletter/26/pdf/smith.pdf
 
-	Vec_R rvec;
+    Vec_R rvec;
 
-	rvec.x = r21.x;
-	rvec.y = r21.y;
-	rvec.z = r21.z;
-	virial_rvec_fvec_full(&rvec, &(angle_force.fi), virial);
+    rvec.x = r21.x;
+    rvec.y = r21.y;
+    rvec.z = r21.z;
+    virial_rvec_fvec_full(&rvec, &(angle_force.fi), virial);
 
-	rvec.x = -r32.x;
-	rvec.y = -r32.y;
-	rvec.z = -r32.z;
-	virial_rvec_fvec_full(&rvec, &(angle_force.fk), virial);
+    rvec.x = -r32.x;
+    rvec.y = -r32.y;
+    rvec.z = -r32.z;
+    virial_rvec_fvec_full(&rvec, &(angle_force.fk), virial);
 
 
     return angle_force;
@@ -1163,9 +1163,9 @@ Vec_4 compute_dihedral_3(double rxi, double ryi, double rzi,
     r_43_32 = outer_product(r43_unit, r32_unit);
 
     const_1 = inner_product(r43_unit, r_21_32)
-				/ (r21_d * pow(sin123,3.0) * sin234);
+                / (r21_d * pow(sin123,3.0) * sin234);
     const_4 = inner_product(r43_unit, r_21_32) 
-				/ (r43_d * pow(sin234,3.0) * sin123);
+                / (r43_d * pow(sin234,3.0) * sin123);
 
     c123 = r21_d * cos123 / r32_d - 1.0;
     b432 = r43_d * cos234 / r32_d;
@@ -1193,37 +1193,37 @@ Vec_4 compute_dihedral_3(double rxi, double ryi, double rzi,
                          - dihedral_force.fl.z;
 
     // scalar viral from angle-dependent potential is zero
-	// but contribution to virial elements is not zero
+    // but contribution to virial elements is not zero
 
-	// add -ri(x)fi to virial
-	// note that the ri's have been treated with PBC
-	// ftp://ftp.dl.ac.uk/ccp5.newsletter/26/pdf/smith.pdf
-	
-	Vec_R rvec;
+    // add -ri(x)fi to virial
+    // note that the ri's have been treated with PBC
+    // ftp://ftp.dl.ac.uk/ccp5.newsletter/26/pdf/smith.pdf
+    
+    Vec_R rvec;
 
-	// i
-	rvec.x = rxi;
-	rvec.y = ryi;
-	rvec.z = rzi;
-	virial_rvec_fvec_full(&rvec, &(dihedral_force.fi), virial);
+    // i
+    rvec.x = rxi;
+    rvec.y = ryi;
+    rvec.z = rzi;
+    virial_rvec_fvec_full(&rvec, &(dihedral_force.fi), virial);
 
-	// j
-	rvec.x -= r21.x;
-	rvec.y -= r21.y;
-	rvec.z -= r21.z;
-	virial_rvec_fvec_full(&rvec, &(dihedral_force.fj), virial);
+    // j
+    rvec.x -= r21.x;
+    rvec.y -= r21.y;
+    rvec.z -= r21.z;
+    virial_rvec_fvec_full(&rvec, &(dihedral_force.fj), virial);
 
-	// k
-	rvec.x -= r32.x;
-	rvec.y -= r32.y;
-	rvec.z -= r32.z;
-	virial_rvec_fvec_full(&rvec, &(dihedral_force.fk), virial);
+    // k
+    rvec.x -= r32.x;
+    rvec.y -= r32.y;
+    rvec.z -= r32.z;
+    virial_rvec_fvec_full(&rvec, &(dihedral_force.fk), virial);
 
-	// l
-	rvec.x -= r43.x;
-	rvec.y -= r43.y;
-	rvec.z -= r43.z;
-	virial_rvec_fvec_full(&rvec, &(dihedral_force.fl), virial);
+    // l
+    rvec.x -= r43.x;
+    rvec.y -= r43.y;
+    rvec.z -= r43.z;
+    virial_rvec_fvec_full(&rvec, &(dihedral_force.fl), virial);
 
 
     return dihedral_force;
@@ -1400,19 +1400,19 @@ void print_rnd_matrix(int nrows, int ncols, double** A)
 //==============================================
 
 void mpi_nonb_pair(Topol *p_topol, Task *p_task, Atom_Info* atom_info,
-				   RunSet *p_runset, System *p_system, int my_id)
+                   RunSet *p_runset, System *p_system, int my_id)
 {
-	long int pair_start = p_task->start_pair[my_id];
-	long int pair_end   = p_task->end_pair[my_id];
+    long int pair_start = p_task->start_pair[my_id];
+    long int pair_end   = p_task->end_pair[my_id];
 
     int i, j, iType, jType, mol_i, atom_i, atom_j, mol_ID_i, funct;
     double rxi, ryi, rzi, rij2, qi, qj;
 
-	double rCut2 = p_runset->rCut2;
-	double rCut  = p_runset->rCut;
+    double rCut2 = p_runset->rCut2;
+    double rCut  = p_runset->rCut;
 
     Vec_nb nonbonded;
-	Vec_R rvec;
+    Vec_R rvec;
 
     long int count = 0;
     // intermolecular nonbonded interaction
@@ -1455,21 +1455,21 @@ void mpi_nonb_pair(Topol *p_topol, Task *p_task, Atom_Info* atom_info,
 
             // check exclusion; note j < i
             if (atom_info[j].molID == mol_ID_i && 
-				1 == p_topol->exclude[mol_i][atom_i][atom_j])
+                1 == p_topol->exclude[mol_i][atom_i][atom_j])
             { 
-            	continue;
+                continue;
             }
 
 
             // check distance_ij
-			rvec.x = p_system->rx[j] - rxi;
-			rvec.y = p_system->ry[j] - ryi;
-			rvec.z = p_system->rz[j] - rzi;
+            rvec.x = p_system->rx[j] - rxi;
+            rvec.y = p_system->ry[j] - ryi;
+            rvec.z = p_system->rz[j] - rzi;
 
-			pbc_12(&rvec, p_system->box);
+            pbc_12(&rvec, p_system->box);
             if(rvec.x >= rCut && rvec.y >= rCut && rvec.z >= rCut ) { continue; }
 
-			rij2 = dist_2(&rvec);
+            rij2 = dist_2(&rvec);
             if(rij2 >= rCut2) { continue; }
 
 
@@ -1492,7 +1492,7 @@ void mpi_nonb_pair(Topol *p_topol, Task *p_task, Atom_Info* atom_info,
             }
 
             // Morse potential
-			else if(3 == funct)
+            else if(3 == funct)
             {
                 double morse_D = p_topol->nonbonded_param[iType][jType].A;
                 double morse_a = p_topol->nonbonded_param[iType][jType].B;
@@ -1522,7 +1522,7 @@ void mpi_nonb_pair(Topol *p_topol, Task *p_task, Atom_Info* atom_info,
                 double c12 = p_topol->nonbonded_param[iType][jType].C12;
 
                 compute_nonbonded(rvec.x, rvec.y, rvec.z, rij2,
-								  p_runset, 1.0, 1.0, 0,
+                                  p_runset, 1.0, 1.0, 0,
                                   c6, c12, qi, qj,
                                   p_system->potential, p_system->virial, &nonbonded);
             }
@@ -1692,10 +1692,10 @@ void mpi_vsites(int mol_start, int mol_end,
 //=============================================================
 
 void mpi_bonded(Task *p_task, Mol_Info* mol_info, Atom_Info* atom_info,
-				Topol *p_topol, RunSet* p_runset, System* p_system, int my_id)
+                Topol *p_topol, RunSet* p_runset, System* p_system, int my_id)
 {
-	int mol_start = p_task->start_mol[my_id];
-	int mol_end   = p_task->end_mol[my_id];
+    int mol_start = p_task->start_mol[my_id];
+    int mol_end   = p_task->end_mol[my_id];
 
     // bonded interaction (including 1-4 pair)
     int im;
@@ -1767,7 +1767,7 @@ void mpi_bonded(Task *p_task, Mol_Info* mol_info, Atom_Info* atom_info,
                 c12    = p_topol->nonbonded_param[iType][jType].C12;
     
                 compute_nonbonded(rxij, ryij, rzij, rij2,
-								  p_runset, p_topol->scaleLJ, p_topol->scaleQQ, 1,
+                                  p_runset, p_topol->scaleLJ, p_topol->scaleQQ, 1,
                                   c6, c12, qi, qj,
                                   p_system->potential, p_system->virial, &nonbonded);
             }
@@ -1785,7 +1785,7 @@ void mpi_bonded(Task *p_task, Mol_Info* mol_info, Atom_Info* atom_info,
                 c12 = c6 * sig_6;
     
                 compute_nonbonded(rxij, ryij, rzij, rij2,
-								  p_runset, 1.0, p_topol->pair_param[mol][iPair].scaleQQ, 1,
+                                  p_runset, 1.0, p_topol->pair_param[mol][iPair].scaleQQ, 1,
                                   c6, c12, qi, qj,
                                   p_system->potential, p_system->virial, &nonbonded);
             }
@@ -1905,7 +1905,7 @@ void mpi_bonded(Task *p_task, Mol_Info* mol_info, Atom_Info* atom_info,
 //==================================================================================
 
 void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
-				Topol *p_topol, System *p_system)
+                Topol *p_topol, System *p_system)
 {
     //double tol = 1.0e-05;
     double tol2 = 2.0e-05;
@@ -1914,7 +1914,7 @@ void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
     int im;
     for (im = 0; im < p_topol->n_mols; ++ im) 
     {
-		int first_atom, mol, iter, done;
+        int first_atom, mol, iter, done;
 
         first_atom = mol_info[im].mini;
         mol = atom_info[first_atom].iMol;
@@ -1930,9 +1930,9 @@ void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
             int iCstr;
             for (iCstr = 0; iCstr < p_topol->n_constraints[mol]; ++ iCstr)
             {
-				int a, b;
-				double rab, pxab, pyab, pzab, pabSQ, rabSQ, diffSQ;
-				double rxab, ryab, rzab, rpab, rma, rmb, gab, dx, dy, dz;
+                int a, b;
+                double rab, pxab, pyab, pzab, pabSQ, rabSQ, diffSQ;
+                double rxab, ryab, rzab, rpab, rma, rmb, gab, dx, dy, dz;
 
                 a = p_topol->constraint[mol][iCstr].atom_i + first_atom;
                 b = p_topol->constraint[mol][iCstr].atom_j + first_atom;
@@ -2002,7 +2002,7 @@ void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 //==================================================================================
 
 void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
-				Topol *p_topol, System *p_system)
+                Topol *p_topol, System *p_system)
 {
     double tol = 1.0e-05;
     double half_dt = 0.5 * dt;
@@ -2096,11 +2096,11 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 
 void mpi_force(Task *p_task, Topol *p_topol,
                Atom_Info* atom_info, Mol_Info* mol_info, 
-			   RunSet* p_runset, Metal *p_metal, System *p_system,
+               RunSet* p_runset, Metal *p_metal, System *p_system,
                int my_id, int num_procs, double** time_used)
 {
-	//double rCut     = p_runset->rCut;
-	double rCut2    = p_runset->rCut2;
+    //double rCut     = p_runset->rCut;
+    double rCut2    = p_runset->rCut2;
 
 
     // monitor time usage
@@ -2128,7 +2128,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
         // build all virtual sites before distributing atomic coordinates
         build_vsites(0, p_topol->n_mols-1, mol_info, atom_info,
                      p_topol->n_vsites, p_topol->vsite_funct, p_topol->vsite_4, 
-					 p_system->rx, p_system->ry, p_system->rz, p_system->box);
+                     p_system->rx, p_system->ry, p_system->rz, p_system->box);
     }
 
 
@@ -2138,16 +2138,16 @@ void mpi_force(Task *p_task, Topol *p_topol,
     t0 = tv.tv_sec + tv.tv_usec * 1.0e-6;
 
     ierr = MPI_Bcast(&(p_system->rx[0]), p_topol->n_atoms*DIM, MPI_DOUBLE, 
-					 root_process, MPI_COMM_WORLD);
+                     root_process, MPI_COMM_WORLD);
 
     zero_force_pot_vir(p_topol->n_atoms, p_system->fx, p_system->fy, p_system->fz, 
-					   p_system->potential, p_system->virial);
+                       p_system->potential, p_system->virial);
 
 
 
-	// update box volume
-	p_system->volume = p_system->box[0] * p_system->box[1] * p_system->box[2];
-	p_system->inv_volume = 1.0 / p_system->volume;
+    // update box volume
+    p_system->volume = p_system->box[0] * p_system->box[1] * p_system->box[2];
+    p_system->inv_volume = 1.0 / p_system->volume;
 
 
     gettimeofday(&tv, NULL);
@@ -2195,21 +2195,21 @@ void mpi_force(Task *p_task, Topol *p_topol,
         {
             // construct p_metal->vec_ext
             mpi_cpff_vec_ext(p_task, p_metal, p_runset, atom_info, p_topol,
-							 p_system, my_id);
+                             p_system, my_id);
 
             gettimeofday(&tv, NULL);
             t1 = tv.tv_sec + tv.tv_usec * 1.0e-6;
             time_used[my_id][6] += (t1 - t0);
             t0 = t1;
 
-			// construct the sparse CPIM matrix
-			long int count_nnz;
+            // construct the sparse CPIM matrix
+            long int count_nnz;
             mpi_cpff_mat_relay_count(p_task, p_metal, p_system, p_runset->rCut2, 
-									 my_id, num_procs, &count_nnz);
+                                     my_id, num_procs, &count_nnz);
 
-			p_metal->val     = my_malloc_2(sizeof(double)   * count_nnz, "val");
-			p_metal->col_ind = my_malloc_2(sizeof(long int) * count_nnz, "col_ind");
-			p_metal->row_ind = my_malloc_2(sizeof(long int) * count_nnz, "row_ind");
+            p_metal->val     = my_malloc_2(sizeof(double)   * count_nnz, "val");
+            p_metal->col_ind = my_malloc_2(sizeof(long int) * count_nnz, "col_ind");
+            p_metal->row_ind = my_malloc_2(sizeof(long int) * count_nnz, "row_ind");
 
             // construct p_metal->mat_relay
             mpi_cpff_mat_relay_CRS(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs);
@@ -2221,23 +2221,23 @@ void mpi_force(Task *p_task, Topol *p_topol,
             t0 = t1;
 
             // solve Ax=b
-			// using preconditioned BiCGSTAB
-			{
-				mpi_precon_bicg_stab_CRS(p_task->start_metal[my_id], p_task->end_metal[my_id], 
-									 p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
-									 p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
-									 my_id, num_procs, p_metal, count_nnz);
-			}
+            // using preconditioned BiCGSTAB
+            {
+                mpi_precon_bicg_stab_CRS(p_task->start_metal[my_id], p_task->end_metal[my_id], 
+                                     p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
+                                     p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
+                                     my_id, num_procs, p_metal, count_nnz);
+            }
             // at the end of mpi_bicg_stab each proc has a copy of p_metal->vec_pq
 
 
-			free(p_metal->val);
-			free(p_metal->col_ind);
-			free(p_metal->row_ind);
+            free(p_metal->val);
+            free(p_metal->col_ind);
+            free(p_metal->row_ind);
 
-			p_metal->val = NULL;
-			p_metal->col_ind = NULL;
-			p_metal->row_ind = NULL;
+            p_metal->val = NULL;
+            p_metal->col_ind = NULL;
+            p_metal->row_ind = NULL;
 
 
             gettimeofday(&tv, NULL);
@@ -2247,7 +2247,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
 
             // compute CPIM forces
             mpi_cpff_force(p_task, p_metal, p_runset,
-						   p_system, p_metal->vec_pq,
+                           p_system, p_metal->vec_pq,
                            p_topol->n_atoms, atom_info, my_id);
 
             gettimeofday(&tv, NULL);
@@ -2266,13 +2266,13 @@ void mpi_force(Task *p_task, Topol *p_topol,
         for(an_id = 1; an_id < num_procs; an_id++) 
         {
             ierr = MPI_Recv(&(p_system->partial_fx[0]), p_topol->n_atoms*DIM, MPI_DOUBLE, 
-							MPI_ANY_SOURCE, tag_11, MPI_COMM_WORLD, &status);
+                            MPI_ANY_SOURCE, tag_11, MPI_COMM_WORLD, &status);
             //sender = status.MPI_SOURCE;
 
             ierr = MPI_Recv(&(p_system->partial_vir[0][0]), DIM*DIM, MPI_DOUBLE, 
-							MPI_ANY_SOURCE, tag_12, MPI_COMM_WORLD, &status);
+                            MPI_ANY_SOURCE, tag_12, MPI_COMM_WORLD, &status);
             ierr = MPI_Recv(&(p_system->partial_pot[0]), 15, MPI_DOUBLE, 
-							MPI_ANY_SOURCE, tag_13, MPI_COMM_WORLD, &status);
+                            MPI_ANY_SOURCE, tag_13, MPI_COMM_WORLD, &status);
 
             for(i = 0; i < p_topol->n_atoms; i++)
             {
@@ -2282,26 +2282,26 @@ void mpi_force(Task *p_task, Topol *p_topol,
             }
 
             for(i = 0; i < DIM; i++)
-			{
+            {
                 for(j = 0; j < DIM; j++)
-				{
+                {
                     p_system->virial[i][j] += p_system->partial_vir[i][j];
-				}
-			}
+                }
+            }
 
             for(i = 0; i < 15; i++)
-			{
+            {
                 p_system->potential[i] += p_system->partial_pot[i];
-			}
+            }
         }
 
 
         // distribute forces from virtual sites to real atoms 
         // after computation of all forces
         mpi_vsites(0, p_topol->n_mols-1, mol_info, atom_info, 
-				   p_topol->n_vsites, p_topol->vsite_funct, p_topol->vsite_4,
+                   p_topol->n_vsites, p_topol->vsite_funct, p_topol->vsite_4,
                    p_system->rx, p_system->ry, p_system->rz, p_system->box, 
-				   p_system->fx, p_system->fy, p_system->fz);
+                   p_system->fx, p_system->fy, p_system->fz);
 
     }
     //======== slave processor ==========================

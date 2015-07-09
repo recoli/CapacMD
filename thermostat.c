@@ -33,33 +33,33 @@
 
 void kinetic_energy(System *p_system, int nAtoms, Atom_Info *atom_info)
 {
-	// diagonal components of the p^2/m tensor
-	double eKsum_xx = 0.0;
-	double eKsum_yy = 0.0;
-	double eKsum_zz = 0.0;
-	double m;
+    // diagonal components of the p^2/m tensor
+    double eKsum_xx = 0.0;
+    double eKsum_yy = 0.0;
+    double eKsum_zz = 0.0;
+    double m;
 
-	int i;
-	for(i = 0; i < nAtoms; i ++)
-	{
-		m = atom_info[i].mass;
-		// ignore the virtual sites
-		if(m > 0.0)
-		{
-			eKsum_xx += m * p_system->vx[i] * p_system->vx[i];
-			eKsum_yy += m * p_system->vy[i] * p_system->vy[i];
-			eKsum_zz += m * p_system->vz[i] * p_system->vz[i];
-		}
-	}
+    int i;
+    for(i = 0; i < nAtoms; i ++)
+    {
+        m = atom_info[i].mass;
+        // ignore the virtual sites
+        if(m > 0.0)
+        {
+            eKsum_xx += m * p_system->vx[i] * p_system->vx[i];
+            eKsum_yy += m * p_system->vy[i] * p_system->vy[i];
+            eKsum_zz += m * p_system->vz[i] * p_system->vz[i];
+        }
+    }
 
-	// update scalar p^2/m and instant temperature
-	p_system->eKsum = eKsum_xx + eKsum_yy + eKsum_zz;
-	p_system->inst_temp = p_system->eKsum / (K_BOLTZ * p_system->ndf);
+    // update scalar p^2/m and instant temperature
+    p_system->eKsum = eKsum_xx + eKsum_yy + eKsum_zz;
+    p_system->inst_temp = p_system->eKsum / (K_BOLTZ * p_system->ndf);
 
-	/*
-	! For now only NVT ensemble is supported.
-	! Pressure coupling not yet implemented.
-	*/
+    /*
+    ! For now only NVT ensemble is supported.
+    ! Pressure coupling not yet implemented.
+    */
 }
 
 
@@ -71,27 +71,27 @@ void kinetic_energy(System *p_system, int nAtoms, Atom_Info *atom_info)
 
 void nose_hoover(RunSet *p_runset, System *p_system, int nAtoms)
 {
-	double aQ, scale;
-	double dt_4 = 0.5 * p_runset->dt_2;
-	double NkT  = p_runset->kT * p_system->ndf;
+    double aQ, scale;
+    double dt_4 = 0.5 * p_runset->dt_2;
+    double NkT  = p_runset->kT * p_system->ndf;
 
-	aQ = (p_system->eKsum - NkT) / p_system->qMass;
-	p_system->vQ += dt_4 * aQ;
-	scale = exp(-p_runset->dt_2 * p_system->vQ);
+    aQ = (p_system->eKsum - NkT) / p_system->qMass;
+    p_system->vQ += dt_4 * aQ;
+    scale = exp(-p_runset->dt_2 * p_system->vQ);
 
-	int i;
-	for(i = 0; i < nAtoms; i ++)
-	{
-		p_system->vx[i] *= scale;
-		p_system->vy[i] *= scale;
-		p_system->vz[i] *= scale;
-	}
+    int i;
+    for(i = 0; i < nAtoms; i ++)
+    {
+        p_system->vx[i] *= scale;
+        p_system->vy[i] *= scale;
+        p_system->vz[i] *= scale;
+    }
 
-	p_system->eKsum     *= scale * scale;
-	p_system->inst_temp *= scale * scale;
-	
-	aQ = (p_system->eKsum - NkT) / p_system->qMass;
-	p_system->vQ += dt_4 * aQ;
+    p_system->eKsum     *= scale * scale;
+    p_system->inst_temp *= scale * scale;
+    
+    aQ = (p_system->eKsum - NkT) / p_system->qMass;
+    p_system->vQ += dt_4 * aQ;
 }
 
 
@@ -101,43 +101,43 @@ void nose_hoover(RunSet *p_runset, System *p_system, int nAtoms)
 
 void remove_comm(int nAtoms, Atom_Info* atom_info, System *p_system)
 {
-	// find center of mass velocity
-	double m_sum, vx_com, vy_com, vz_com, m;
+    // find center of mass velocity
+    double m_sum, vx_com, vy_com, vz_com, m;
 
-	vx_com = 0.0;
-	vy_com = 0.0;
-	vz_com = 0.0;
-	m_sum  = 0.0;
+    vx_com = 0.0;
+    vy_com = 0.0;
+    vz_com = 0.0;
+    m_sum  = 0.0;
 
-	int i;
-	for(i = 0; i < nAtoms; ++ i) 
-	{
-		m = atom_info[i].mass;
-		if(m > 0.0)
-		{
-			vx_com += p_system->vx[i] * m;
-			vy_com += p_system->vy[i] * m;
-			vz_com += p_system->vz[i] * m;
-			m_sum  += m;
-		}
-	}
+    int i;
+    for(i = 0; i < nAtoms; ++ i) 
+    {
+        m = atom_info[i].mass;
+        if(m > 0.0)
+        {
+            vx_com += p_system->vx[i] * m;
+            vy_com += p_system->vy[i] * m;
+            vz_com += p_system->vz[i] * m;
+            m_sum  += m;
+        }
+    }
 
-	vx_com /= m_sum;
-	vy_com /= m_sum;
-	vz_com /= m_sum;
+    vx_com /= m_sum;
+    vy_com /= m_sum;
+    vz_com /= m_sum;
 
-	// zero center of mass velocity
-	for(i = 0; i < nAtoms; i ++) 
-	{
-		m = atom_info[i].mass;
-		// ignore the virtual sites
-		if(m > 0.0)
-		{
-			p_system->vx[i] -= vx_com;
-			p_system->vy[i] -= vy_com;
-			p_system->vz[i] -= vz_com;
-		}
-	}
+    // zero center of mass velocity
+    for(i = 0; i < nAtoms; i ++) 
+    {
+        m = atom_info[i].mass;
+        // ignore the virtual sites
+        if(m > 0.0)
+        {
+            p_system->vx[i] -= vx_com;
+            p_system->vy[i] -= vy_com;
+            p_system->vz[i] -= vz_com;
+        }
+    }
 }
 
 

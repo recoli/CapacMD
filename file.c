@@ -106,10 +106,10 @@ void read_settings(char *input_mdset, RunSet *p_runset, Metal *p_metal)
         else if (0 == strcmp(option, "ref_T_in_K"   )) { p_runset->ref_temp = atof(value); }
         else if (0 == strcmp(option, "tau_T_in_ps"  )) { p_runset->tau_temp = atof(value); }
 
-		/*
+        /*
         else if (0 == strcmp(option, "ref_P_in_bar")) { p_runset->ref_pres = atof(value); }
         else if (0 == strcmp(option, "tau_P_in_ps" )) { p_runset->tau_pres = atof(value); }
-		*/
+        */
 
         else if (0 == strcmp(option, "fix_metal")) { p_metal->fix_pos  = atoi(value); }
         else if (0 == strcmp(option, "use_cpff" )) { p_metal->use_cpff = atoi(value); }
@@ -144,16 +144,16 @@ void read_gro(char *input_gro, System *p_system,
     p_system->vQ = 0.0;
     p_system->vP = 0.0;
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
-	{
+    {
         sscanf(line, "%s%d%s%lf%s%lf", 
-				subline, &step, sub_2, &p_system->vQ, sub_3, &p_system->vP);
-	}
+                subline, &step, sub_2, &p_system->vQ, sub_3, &p_system->vP);
+    }
 
     // read the second line for number of atoms
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
-	{
+    {
         sscanf(line, "%d", ptr_nAtoms);
-	}
+    }
 
     // read coordinates
     int i;
@@ -178,16 +178,16 @@ void read_gro(char *input_gro, System *p_system,
             substr(subline, line, 20, MAX_STR_LEN-20);
             sscanf(subline, "%lf%lf%lf%lf%lf%lf", 
                    &p_system->rx[i], &p_system->ry[i], &p_system->rz[i], 
-				   &p_system->vx[i], &p_system->vy[i], &p_system->vz[i]);
+                   &p_system->vx[i], &p_system->vy[i], &p_system->vz[i]);
         }
     }
 
     // box size
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
-	{
+    {
         sscanf(line, "%lf%lf%lf", 
-				&p_system->box[0], &p_system->box[1], &p_system->box[2]);
-	}
+                &p_system->box[0], &p_system->box[1], &p_system->box[2]);
+    }
 
     fclose(gro);
 }
@@ -197,7 +197,7 @@ void read_gro(char *input_gro, System *p_system,
 //========================
 
 void write_gro(FILE *file_gro, System *p_system,
-			   int nAtoms, Atom_Info *atom_info, int step)
+               int nAtoms, Atom_Info *atom_info, int step)
 {
     fprintf(file_gro, "step  %d  vQ  %lf  vP  %lf\n", step, p_system->vQ, p_system->vP);
     fprintf(file_gro, "%5d\n", nAtoms);
@@ -208,11 +208,11 @@ void write_gro(FILE *file_gro, System *p_system,
         fprintf(file_gro, "%5d%-5s%5s%5d%10.5f%10.5f%10.5f%10.6f%10.6f%10.6f\n", 
                 atom_info[i].resID, atom_info[i].resName, atom_info[i].atomName, i+1,
                 p_system->rx[i], p_system->ry[i], p_system->rz[i], 
-				p_system->vx[i], p_system->vy[i], p_system->vz[i]);
+                p_system->vx[i], p_system->vy[i], p_system->vz[i]);
     }
 
     fprintf(file_gro, "%10.5f%10.5f%10.5f\n", 
-			p_system->box[0], p_system->box[1], p_system->box[2]);
+            p_system->box[0], p_system->box[1], p_system->box[2]);
 }
 
 //================================================
@@ -228,9 +228,9 @@ void write_vec_pq(FILE *file_pq, Metal *p_metal, int step)
     int iNP;
     fprintf(file_pq, "  lambda");
     for (iNP = 0; iNP < p_metal->n_NPs; ++ iNP)
-	{
+    {
         fprintf(file_pq, " %.10f", p_metal->vec_pq[n_metal*4 + iNP]);
-	}
+    }
     fprintf(file_pq, "\n");
 
     // print number of metal atoms, dipole vectors and charges
@@ -238,11 +238,11 @@ void write_vec_pq(FILE *file_pq, Metal *p_metal, int step)
 
     int i;
     for (i = 0; i < n_metal; ++ i)
-	{
+    {
         fprintf(file_pq, "%15.8f%15.8f%15.8f%15.8f\n", 
                 p_metal->vec_pq[i*3], p_metal->vec_pq[i*3+1], p_metal->vec_pq[i*3+2], 
                 p_metal->vec_pq[n_metal*3+i]);
-	}
+    }
 }
 
 
@@ -329,9 +329,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (atom = 0; atom < n_atoms; ++ atom) 
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -350,12 +350,12 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
     if (0 == strcmp(subline, "NONBONDED"))
     {
         for (iType = 0; iType < p_topol->n_types; ++ iType)
-		{
+        {
             for (jType = iType; jType < p_topol->n_types; ++ jType)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
-		}
+            }
+        }
     }
     else
     {
@@ -379,9 +379,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iBond = 0; iBond < num_bonds; ++ iBond)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -399,9 +399,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iPair = 0; iPair < num_pairs; ++ iPair)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -419,9 +419,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iAngle = 0; iAngle < num_angles; ++ iAngle)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -439,9 +439,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iDihedral = 0; iDihedral < num_dihedrals; ++ iDihedral)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -459,9 +459,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iVSite = 0; iVSite < num_vsites; ++ iVSite)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -479,9 +479,9 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
         if (0 == strcmp(subline, my_string))
         {
             for (iCstr = 0; iCstr < num_constraints; ++ iCstr)
-			{
+            {
                 read_next_line(file_par, line, subline);
-			}
+            }
         }
         else
         {
@@ -497,13 +497,13 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
     if (0 == strcmp(subline, "MM_METAL"))
     {
         if (p_metal->min >=0 && p_metal->max >= p_metal->min)
-		{
+        {
             p_metal->num = p_metal->max - p_metal->min + 1;
-		}
+        }
         else
-		{
+        {
             p_metal->num = 0;
-		}
+        }
     }
     else
     {
@@ -514,7 +514,7 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
     // Quantum Sutton-Chen parameters
     read_next_line(file_par, line, subline);
     sscanf(line, "%s%d%d%lf%lf%lf", subline, 
-		   &(p_metal->qsc_n), &(p_metal->qsc_m),
+           &(p_metal->qsc_n), &(p_metal->qsc_m),
            &(p_metal->qsc_eps), &(p_metal->qsc_c), &(p_metal->qsc_a));
     if (0 != strcmp(subline, "QSC_METAL"))
     {
@@ -608,50 +608,50 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
 
             // LJ
             if (1 == funct)
-			{
+            {
                 sscanf(line, "%d%le%le", 
                        &(p_topol->nonbonded_param[iType][jType].funct),
                        &(p_topol->nonbonded_param[iType][jType].C6),
                        &(p_topol->nonbonded_param[iType][jType].C12));
-			}
+            }
 
             // Buckingham
             else if (2 == funct)
-			{
+            {
                 sscanf(line, "%d%le%le%le", 
                        &(p_topol->nonbonded_param[iType][jType].funct),
                        &(p_topol->nonbonded_param[iType][jType].A),
                        &(p_topol->nonbonded_param[iType][jType].B),
                        &(p_topol->nonbonded_param[iType][jType].C6));
-			}
+            }
 
             // Morse
             else if (3 == funct)
-			{
+            {
                 sscanf(line, "%d%le%le%le", 
                        &(p_topol->nonbonded_param[iType][jType].funct),
                        &(p_topol->nonbonded_param[iType][jType].A),
                        &(p_topol->nonbonded_param[iType][jType].B),
                        &(p_topol->nonbonded_param[iType][jType].C6));
-			}
+            }
 
             // erf_vdw
-			else if (4 == funct)
-			{
+            else if (4 == funct)
+            {
                 sscanf(line, "%d%le%le%le", 
                        &(p_topol->nonbonded_param[iType][jType].funct),
                        &(p_topol->nonbonded_param[iType][jType].C6),
                        &(p_topol->nonbonded_param[iType][jType].C12),
                        &(p_topol->nonbonded_param[iType][jType].A));
-			}
+            }
 
             // error
-			else
-			{
+            else
+            {
                 printf("Error: unsupported vdW type: %d in line:\n%s\n", 
                        funct, line );
-				exit(1);
-			}
+                exit(1);
+            }
         }
     }
 
@@ -926,13 +926,13 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
             {
                 sscanf(line, "%d%d%d%d%d%lf%lf%lf",
                        &(p_topol->vsite_4[mol][iVSite].atom_i), 
-					   &(p_topol->vsite_4[mol][iVSite].atom_j),
+                       &(p_topol->vsite_4[mol][iVSite].atom_j),
                        &(p_topol->vsite_4[mol][iVSite].atom_k), 
-					   &(p_topol->vsite_4[mol][iVSite].atom_s),
+                       &(p_topol->vsite_4[mol][iVSite].atom_s),
                        &(p_topol->vsite_funct[mol][iVSite]),    
-					   &(p_topol->vsite_4[mol][iVSite].a), 
+                       &(p_topol->vsite_4[mol][iVSite].a), 
                        &(p_topol->vsite_4[mol][iVSite].b),      
-					   &(p_topol->vsite_4[mol][iVSite].c));
+                       &(p_topol->vsite_4[mol][iVSite].c));
 
                 p_topol->exclude[mol][atom_s][atom_i] = 1;
                 p_topol->exclude[mol][atom_s][atom_j] = 1;
@@ -1048,32 +1048,32 @@ void assign_indices(Topol *p_topol, Metal *p_metal,
     }
 
 
-	// assign atom and residue, mass and charge
-	for (i = 0; i < p_topol->n_atoms; ++ i)
-	{
-		int this_iMol  = atom_info[i].iMol;
-		int this_iAtom = atom_info[i].iAtom;
+    // assign atom and residue, mass and charge
+    for (i = 0; i < p_topol->n_atoms; ++ i)
+    {
+        int this_iMol  = atom_info[i].iMol;
+        int this_iAtom = atom_info[i].iAtom;
 
-		atom_info[i].mass     = p_topol->atom_param[this_iMol][this_iAtom].mass;
-		atom_info[i].charge   = p_topol->atom_param[this_iMol][this_iAtom].charge;
-		atom_info[i].atomtype = p_topol->atom_param[this_iMol][this_iAtom].atomtype;
+        atom_info[i].mass     = p_topol->atom_param[this_iMol][this_iAtom].mass;
+        atom_info[i].charge   = p_topol->atom_param[this_iMol][this_iAtom].charge;
+        atom_info[i].atomtype = p_topol->atom_param[this_iMol][this_iAtom].atomtype;
 
-		if (atom_info[i].mass > 0.0)
-		{
-			atom_info[i].inv_mass = 1.0 / atom_info[i].mass;
-		}
-		else
-		{
-			atom_info[i].inv_mass = 0.0;
-		}
+        if (atom_info[i].mass > 0.0)
+        {
+            atom_info[i].inv_mass = 1.0 / atom_info[i].mass;
+        }
+        else
+        {
+            atom_info[i].inv_mass = 0.0;
+        }
 
-		atom_info[i].is_metal = 0;
-	}
+        atom_info[i].is_metal = 0;
+    }
 
 
-	// check metal atom
-	for (i = p_metal->min; i <= p_metal->max; ++ i)
-	{
-		atom_info[i].is_metal = 1;
-	}
+    // check metal atom
+    for (i = p_metal->min; i <= p_metal->max; ++ i)
+    {
+        atom_info[i].is_metal = 1;
+    }
 }

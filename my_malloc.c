@@ -33,34 +33,34 @@
 
 void* my_malloc(size_t bytes) 
 {
-	void* ptr = malloc(bytes);
-	if(ptr == NULL) 
-	{
-		printf ("Error: could not allocate memory!\n");
-		exit(1);
-	} 
-	else 
-	{
-		return ptr;
-	}
+    void* ptr = malloc(bytes);
+    if(ptr == NULL) 
+    {
+        printf ("Error: could not allocate memory!\n");
+        exit(1);
+    } 
+    else 
+    {
+        return ptr;
+    }
 }
 
 void* my_malloc_2(size_t bytes, char *word)
 {
-	void* ptr = malloc(bytes);
+    void* ptr = malloc(bytes);
 
 #ifdef DEBUG
-	printf("size of alloc (%s) = %zu MB\n", word, bytes / 1000000);
+    printf("size of alloc (%s) = %zu MB\n", word, bytes / 1000000);
 #endif
 
-	if(ptr == NULL) 
-	{
-		printf ("Error: could not allocate memory for %s !\n", word);
-		exit(1);
-	} 
-	else 
-	{
-		return ptr;
-	}
+    if(ptr == NULL) 
+    {
+        printf ("Error: could not allocate memory for %s !\n", word);
+        exit(1);
+    } 
+    else 
+    {
+        return ptr;
+    }
 }
 
