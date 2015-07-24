@@ -328,6 +328,13 @@ int main(int argc, char *argv[])
         printf("              +-----------------------------------------------------+\n");
         printf("\n");
 
+        printf("              .------------------ reference paper ------------------.\n");
+        printf("\n");
+        printf("    Molecular Dynamics Simulations using a Capacitance-Polarizability Force Field,\n");
+        printf("    Xin Li and Hans Agren, J. Phys. Chem. C, 2015, DOI: 10.1021/acs.jpcc.5b04347\n");
+        printf("\n");
+        printf("\n");
+
         printf("    Calculation started at %s", ctime(&start_t));
         printf("    Parallelized via MPI, number of processors = %d\n", num_procs);
         printf("\n");
