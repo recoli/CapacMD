@@ -187,223 +187,34 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 }
 
 
-//==================================================
-// count number of non-zero elements
-//==================================================
-
-void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                              int my_id, int num_procs, long int *p_count_nnz)
+// update count_nnz; also update count_size and reallocate memory when necessary
+// will be used in the construction of CPIM matrix
+void update_count_nnz(long int *p_count_nnz, long int *p_count_size, long int incr_size, Metal *p_metal)
 {
-    //double thrshd = 1.0e-05;
+    ++ (*p_count_nnz);
 
-    int start_metal = p_task->start_metal[my_id];
-    int end_metal   = p_task->end_metal[my_id];
-
-    double inv_polar = p_metal->inv_polar;
-    double inv_capac = p_metal->inv_capac;
-    double inv_R_pp  = p_metal->inv_R_pp;
-    double inv_R_pq  = p_metal->inv_R_pq;
-    double inv_R_qq  = p_metal->inv_R_qq;
-
-    int min_metal = p_metal->min;
-    int max_metal = p_metal->max;
-    int n_NPs     = p_metal->n_NPs;
-
-    int i_metal, j_metal, iNP, i, j, a, b;
-
-
-    // the delta function
-    double delta[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-
-    Vec_R rvec;
-
-    const int root_process = 0;
-
-    //=======================================================================
-    // Relay matrix for electrointeraction within metal nanoparticle
-    // !!!!!
-    // NOTE: This part is evaluated in atomic units!
-    // !!!!!
-    //=======================================================================
-
-
-    long int count_nnz = 0;
-    
-    // i_metal loops over local metal atoms on each processor
-    for (i_metal = start_metal; i_metal <= end_metal; ++ i_metal)
+    if (*p_count_nnz >= *p_count_size)
     {
-        i = i_metal - min_metal;
+        *p_count_size += incr_size;
 
-        // j_metal loops over all metal atoms
-        for (j_metal = min_metal; j_metal <= max_metal; ++ j_metal)
+        p_metal->val     = realloc(p_metal->val    , sizeof(double)   * (*p_count_size));
+        p_metal->col_ind = realloc(p_metal->col_ind, sizeof(long int) * (*p_count_size));
+        p_metal->row_ind = realloc(p_metal->row_ind, sizeof(long int) * (*p_count_size));
+
+        if (NULL == p_metal->val ||
+            NULL == p_metal->col_ind ||
+            NULL == p_metal->row_ind)
         {
-            j = j_metal - min_metal;
-
-            double r[3], rij2, rij;
-            double exp_rijRpp2, inv_Rpp3, const_1, const_2, exp__rijRpq2, const_3;
-
-            if (j != i)
-            {
-                rvec.x = p_system->rx[j_metal] - p_system->rx[i_metal];
-                rvec.y = p_system->ry[j_metal] - p_system->ry[i_metal];
-                rvec.z = p_system->rz[j_metal] - p_system->rz[i_metal];
-                pbc_12(&rvec, p_system->box);
-                scale_vec_1(NM2BOHR, &rvec); // nm to atomic unit
-
-
-                rij2 = dist_2(&rvec);
-                rij  = sqrt(rij2);
-
-                r[0] = rvec.x;
-                r[1] = rvec.y;
-                r[2] = rvec.z;
-
-
-                exp_rijRpp2 = exp(-(rij2 * inv_R_pp * inv_R_pp));
-                inv_Rpp3 = pow(inv_R_pp, 3.0);
-                
-                const_1 = 1.0 / pow(rij, 5.0) * 
-                          (erf(rij * inv_R_pp) - 
-                           2.0 * INV_SQRT_PI * inv_R_pp * rij * exp_rijRpp2);
-                const_2 = 4.0 * INV_SQRT_PI * inv_Rpp3 / rij2 * exp_rijRpp2;
-
-
-                exp__rijRpq2 = exp(-(rij2 * inv_R_pq * inv_R_pq));
-                
-                const_3 = 1.0 / pow(rij, 3.0) * 
-                          (erf(rij * inv_R_pq) - 
-                           2.0 * INV_SQRT_PI * inv_R_pq * rij * exp__rijRpq2);
-            }
-    
-
-            // submatrix [A -M 0]: row from start_metal * 3 to end_metal * 3
-            for (a = 0; a < DIM; ++ a)
-            {
-                // submatrix Aij, dimension 3x3
-                for (b = 0; b < DIM; ++ b)
-                {
-                    if (j == i)
-                    {
-                        if (b == a)
-                        {
-                            double element = inv_polar;
-                            if (fabs(element) > THRSHD_P)
-                            {
-                                ++ count_nnz;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        double element =
-                            -(const_1 * (3.0 * r[a] * r[b] - delta[a][b] * rij2) -
-                              const_2 * r[a] * r[b]);
-                        if (fabs(element) > THRSHD_P)
-                        {
-                            ++ count_nnz;
-                        }
-                    }
-
-                }
-
-                // submatrix -Mij, dimension 3x1
-                {
-                    if (j != i)
-                    {
-                        // -Mij for mu_i - q_j interaction
-                        double element = const_3 * r[a];
-                        if (fabs(element) > THRSHD_M)
-                        {
-                            ++ count_nnz;
-                        }
-                    }
-                }
-
-                // submatrix 0, do nothing
-            
-            }
-
-            // submatrix [-M^T -C 1_or_0]: row from n_metal*3 + start_metal to n_metal*3 + end_metal
-            {
-                // submatrix -Mij^T, dimension 1x3
-                for(b = 0; b < 3; ++ b)
-                {
-                    if (j != i)
-                    {
-                        // -Mji for mu_j - q_i interaction
-                        double element = -const_3 * r[b];
-                        if (fabs(element) > THRSHD_M)
-                        {
-                            ++ count_nnz;
-                        }
-                    }
-                }
-
-                // submatrix -Cij, dimension 1x1
-                if (j == i)
-                {
-                    double element = -inv_capac;
-                    if (fabs(element) > THRSHD_Q)
-                    {
-                        ++ count_nnz;
-                    }
-                }
-                else
-                {
-                    double element = -erf(rij * inv_R_qq) / rij;
-                    if (fabs(element) > THRSHD_Q)
-                    {
-                        ++ count_nnz;
-                    }
-                }
-
-                // submatrix 1_or_0, Lagrangian part, dimension 1 x n_NPs
-                if (min_metal == j_metal)
-                {
-                    for(iNP = 0; iNP < n_NPs; ++ iNP)
-                    {
-                        if (i_metal >= p_metal->start_NP[iNP] && 
-                            i_metal <= p_metal->end_NP[iNP])
-                        {
-                            double element = 1.0;
-                            if (fabs(element) > THRSHD_Q)
-                            {
-                                ++ count_nnz;
-                            }
-                        }
-                    }
-                }
-            }
+            printf("Error in update_count_nnz; cannot realloc memory!\n");
+            printf("      count_nnz= %ld\n", *p_count_nnz);
+            printf("      count_size= %ld\n", *p_count_size);
+            printf("      memory needed= %zu + %zu + %zu MB\n", 
+                    sizeof(double)   * (*p_count_size) / 1000000,
+                    sizeof(long int) * (*p_count_size) / 1000000,
+                    sizeof(long int) * (*p_count_size) / 1000000);
+            exit(1);
         }
     }
-
-    // submatrix [0 1_or_0 0]
-    // dimension n_NPs x 1 for each metal atom
-    // saved on root processor
-    if (root_process == my_id)
-    {
-        for(iNP = 0; iNP < n_NPs; ++ iNP)
-        {
-            // note: on root processor, i_metal loops over all metal atoms
-            for (i_metal = min_metal; i_metal <= max_metal; ++ i_metal)
-            {
-                if (i_metal >= p_metal->start_NP[iNP] && 
-                    i_metal <= p_metal->end_NP[iNP])
-                {
-                    double element = 1.0;
-                    if (fabs(element) > THRSHD_Q)
-                    {
-                        ++ count_nnz;
-                    }
-                }
-            }
-        }
-    }
-
-    // no need to gather mat_relay on root processor
-    // mat_relay will stay distributed on each proc for subsequent mpi_bicg_stab
-
-    *p_count_nnz = count_nnz;
 }
 
 
@@ -412,9 +223,12 @@ void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, do
 //==================================================
 
 void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                            int my_id, int num_procs)
+                            int my_id, int num_procs, 
+                            long int *p_count_size, long int incr_size, long int *p_count_nnz)
 {
-    //double thrshd = 1.0e-05;
+    // initialize nnz and size counter
+    long int count_nnz  = 0;
+    long int count_size = 0;
 
     int start_metal = p_task->start_metal[my_id];
     int end_metal   = p_task->end_metal[my_id];
@@ -447,7 +261,6 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
     // !!!!!
     //=======================================================================
     
-    long int count_nnz = 0;
     long int irow, icol;
 
     // i_metal loops over local metal atoms on each processor
@@ -521,7 +334,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                                 p_metal->col_ind[count_nnz] = icol;
                                 p_metal->row_ind[count_nnz] = irow;
 
-                                ++ count_nnz;
+                                //++ count_nnz;
+                                update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                             }
                         }
                     }
@@ -537,7 +351,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                             p_metal->col_ind[count_nnz] = icol;
                             p_metal->row_ind[count_nnz] = irow;
                         
-                            ++ count_nnz;
+                            //++ count_nnz;
+                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                         }
                     }
 
@@ -557,7 +372,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                             p_metal->col_ind[count_nnz] = icol;
                             p_metal->row_ind[count_nnz] = irow;
                         
-                            ++ count_nnz;
+                            //++ count_nnz;
+                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                         }
                     }
                 }
@@ -585,7 +401,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                             p_metal->col_ind[count_nnz] = icol;
                             p_metal->row_ind[count_nnz] = irow;
                         
-                            ++ count_nnz;
+                            //++ count_nnz;
+                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                         }
                     }
                 }
@@ -604,7 +421,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                         p_metal->col_ind[count_nnz] = icol;
                         p_metal->row_ind[count_nnz] = irow;
                     
-                        ++ count_nnz;
+                        //++ count_nnz;
+                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                     }
                 }
                 else
@@ -617,7 +435,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                         p_metal->col_ind[count_nnz] = icol;
                         p_metal->row_ind[count_nnz] = irow;
                     
-                        ++ count_nnz;
+                        //++ count_nnz;
+                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                     }
                 }
 
@@ -639,7 +458,8 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                                 p_metal->col_ind[count_nnz] = icol;
                                 p_metal->row_ind[count_nnz] = irow;
                             
-                                ++ count_nnz;
+                                //++ count_nnz;
+                                update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                             }
                         }
                     }
@@ -674,12 +494,16 @@ void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, doub
                         p_metal->col_ind[count_nnz] = icol;
                         p_metal->row_ind[count_nnz] = irow;
                     
-                        ++ count_nnz;
+                        //++ count_nnz;
+                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
                     }
                 }
             }
         }
     }
+
+    *p_count_nnz  = count_nnz;
+    *p_count_size = count_size;
 
     // no need to gather mat_relay on root processor
     // mat_relay will stay distributed on each proc for subsequent mpi_bicg_stab

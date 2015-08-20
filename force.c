@@ -2203,17 +2203,32 @@ void mpi_force(Task *p_task, Topol *p_topol,
             t0 = t1;
 
             // construct the sparse CPIM matrix
-            long int count_nnz;
-            mpi_cpff_mat_relay_count(p_task, p_metal, p_system, p_runset->rCut2, 
-                                     my_id, num_procs, &count_nnz);
+            
+            // define an incremental number of elements for realloc
+            long int n_mat = p_metal->num * 4 + p_metal->n_NPs;
+            long int incr_size = n_mat * (p_metal->num * 4) / num_procs / 16;
+            if (my_id == root_process) { incr_size += n_mat * p_metal->n_NPs / 4; }
 
-            p_metal->val     = my_malloc_2(sizeof(double)   * count_nnz, "val");
-            p_metal->col_ind = my_malloc_2(sizeof(long int) * count_nnz, "col_ind");
-            p_metal->row_ind = my_malloc_2(sizeof(long int) * count_nnz, "row_ind");
+            // initialize count_size and count_nnz
+            long int count_size = incr_size;
+            long int count_nnz = 0;
+
+            // allocate memory for the CPIM matrix
+            p_metal->val     = my_malloc_2(sizeof(double)   * count_size, "val");
+            p_metal->col_ind = my_malloc_2(sizeof(long int) * count_size, "col_ind");
+            p_metal->row_ind = my_malloc_2(sizeof(long int) * count_size, "row_ind");
 
             // construct p_metal->mat_relay
-            mpi_cpff_mat_relay_CRS(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs);
+            // also realloc memory for the CPIM matrix when necessary
+            mpi_cpff_mat_relay_CRS(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs, 
+                                    &count_size, incr_size, &count_nnz);
 
+#ifdef DEBUG
+            printf("count_nnz= %ld, count_size= %ld, memory_size= %zu MB, overhead= %.1f%%\n", 
+                    count_nnz, count_size,
+                    (sizeof(double) + sizeof(long int) * 2) * count_size / 1000000,
+                    (double)(count_size - count_nnz) / count_size * 100);
+#endif
 
             gettimeofday(&tv, NULL);
             t1 = tv.tv_sec + tv.tv_usec * 1.0e-6;

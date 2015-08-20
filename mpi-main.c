@@ -331,7 +331,8 @@ int main(int argc, char *argv[])
         printf("              .------------------ reference paper ------------------.\n");
         printf("\n");
         printf("    Molecular Dynamics Simulations using a Capacitance-Polarizability Force Field,\n");
-        printf("    Xin Li and Hans Agren, J. Phys. Chem. C, 2015, DOI: 10.1021/acs.jpcc.5b04347\n");
+        printf("    Xin Li and Hans Agren, J. Phys. Chem. C, 2015, 119, 19430-19437.\n");
+        printf("    http://pubs.acs.org/doi/abs/10.1021/acs.jpcc.5b04347\n");
         printf("\n");
         printf("\n");
 

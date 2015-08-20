@@ -35,11 +35,9 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 // constructs the CPIM relay matrix
 //==================================================
 
-void mpi_cpff_mat_relay_count(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                              int my_id, int num_procs, long int *p_count_nnz);
-
 void mpi_cpff_mat_relay_CRS(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                        int my_id, int num_procs);
+                            int my_id, int num_procs, 
+                            long int *p_count_size, long int incr_size, long int *p_count_nnz);
 
 //=======================
 // calculate CPIM forces
