@@ -1,0 +1,22 @@
+run_type          md
+ensemble          nvt
+
+em_steps          100
+em_length_in_nm   0.0001
+em_tolerance      1000.0
+
+number_of_steps   50
+time_step_in_ps   0.002
+save_step         1
+
+vdw_type          shifted
+coulomb_type      wolf_sum
+cut_off_radius    1.2
+coulomb_alpha     2.0
+
+heating_steps     0
+ref_T_in_K        300.0
+tau_T_in_ps       0.1
+
+fix_metal         0
+use_cpff          1

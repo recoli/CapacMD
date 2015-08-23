@@ -2116,7 +2116,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
     int tag_13 = 13; // slave to master, p_system->partial_pot
 
     //int i_mat, j_mat;
-    int n_mat = p_metal->num * 4 + p_metal->n_NPs;
+    //int n_mat = p_metal->num * 4 + p_metal->n_NPs;
 
     int i, j;
 

@@ -1,0 +1,45 @@
+SCALE_LJ_QQ    0.50000000     0.83333333     
+
+MOLECULES      2         
+gold           309
+SOL            3866
+
+gold_ATOMS          1         
+     0.000000   196.970000       0
+
+SOL_ATOMS           3     
+    -0.834000    16.000000       1
+     0.417000     1.008000       2
+     0.417000     1.008000       2
+
+NONBONDED      3         6         
+ 1    0.00000000e+00      0.00000000e+00       
+ 4  0.002522219544  3.624859037184e-06  2.25
+ 4  0.001028707002  1.45541995368e-06   2.25
+ 1    2.48970844e-03      2.43509761e-06       
+ 1    0.00000000e+00      0.00000000e+00       
+ 1    0.00000000e+00      0.00000000e+00       
+
+gold_BONDS          0         
+gold_PAIRS          0         
+gold_ANGLES         0         
+gold_DIHEDRALS      0         
+gold_VSITES         0         
+gold_CSTRS          0
+
+SOL_BONDS           0         
+SOL_PAIRS           0         
+SOL_ANGLES          0         
+SOL_DIHEDRALS       0         
+SOL_VSITES          0         
+SOL_CSTRS           3
+0 1   0.09572
+0 2   0.09572
+1 2   0.15139
+
+MM_METAL  0  308
+QSC_METAL  11  8  0.753087  53.581000  0.406510
+CPFF_METAL  39.529700  1.215900   ;  Note: atomic unit
+
+NANOPARTICLES   1
+START_END_CHG   0  308   0.0
