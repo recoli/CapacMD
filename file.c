@@ -141,12 +141,12 @@ void read_gro(char *input_gro, System *p_system,
     // read the first line and get vQ, vP for thermo/barostats
     int step;
     char sub_2[MAX_STR_LEN], sub_3[MAX_STR_LEN];
-    p_system->vQ = 0.0;
+    p_system->vQ[0] = 0.0;
     p_system->vP = 0.0;
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
     {
         sscanf(line, "%s%d%s%lf%s%lf", 
-                subline, &step, sub_2, &p_system->vQ, sub_3, &p_system->vP);
+                subline, &step, sub_2, &p_system->vQ[0], sub_3, &p_system->vP);
     }
 
     // read the second line for number of atoms
@@ -199,7 +199,7 @@ void read_gro(char *input_gro, System *p_system,
 void write_gro(FILE *file_gro, System *p_system,
                int nAtoms, Atom_Info *atom_info, int step)
 {
-    fprintf(file_gro, "step  %d  vQ  %lf  vP  %lf\n", step, p_system->vQ, p_system->vP);
+    fprintf(file_gro, "step  %d  vQ  %lf  vP  %lf\n", step, p_system->vQ[0], p_system->vP);
     fprintf(file_gro, "%5d\n", nAtoms);
 
     int i;

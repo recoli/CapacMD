@@ -327,7 +327,9 @@ typedef struct {
     // eKsum = sum_(m*v^2) or sum_(p^2/m)
     // temperature & pressure coupling, instantaneous temperature and pressure
     // degree of freedom
-    double eKsum, qMass, pMass, vQ, vP;
+    double eKsum, qMass, pMass, vP;
+    double *vQ, *aQ;
+    int    num_nhc;
     double first_temp, ext_temp, inst_temp, inst_pres;
     double pressure[3];
     int    ndf;

@@ -30,17 +30,16 @@
 
 void kinetic_energy(System *p_system, int nAtoms, Atom_Info *atom_info);
 
-//========================================
-// Nose-Hoover coupling for NVT ensemble
-// see Mol. Phys, 1996, 87, 1117-1157
-// DOI: 10.1080/00268979600100761
-//========================================
-
-void nose_hoover(RunSet *p_runset, System *p_system, int nAtoms);
-
 //=======================================
 // remove center of mass translation
 //=======================================
 
 void remove_comm(int nAtoms, Atom_Info* atom_info, System *p_system);
 
+//=======================================
+// Nose-Hoover chain for NVT ensemble
+// see Mol. Phys, 1996, 87, 1117-1157
+// DOI: 10.1080/00268979600100761
+//=======================================
+
+void nose_hoover_chain(RunSet *p_runset, System *p_system, int nAtoms);

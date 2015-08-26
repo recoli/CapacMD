@@ -506,7 +506,15 @@ int main(int argc, char *argv[])
     //================ read input gro file ==================
     
     // vQ and vP are "velocities" of the thermostat/barostat particles
-    p_system->vQ = 0.0;
+    p_system->num_nhc = 10; // number of NH-chains hard-coded as 10
+    p_system->vQ = my_malloc(sizeof(double) * p_system->num_nhc);
+    p_system->aQ = my_malloc(sizeof(double) * p_system->num_nhc);
+    int i_nhc;
+    for (i_nhc = 0; i_nhc < p_system->num_nhc; ++ i_nhc)
+    {
+        p_system->vQ[i_nhc] = 0.0;
+        p_system->aQ[i_nhc] = 0.0;
+    }
     p_system->vP = 0.0;
 
     int groNAtoms;
@@ -675,7 +683,7 @@ int main(int argc, char *argv[])
     if (0 == strcmp(p_runset->run_type, "em") || 
         0 == strcmp(p_runset->run_type, "cg"))
     {
-        p_system->vQ = 0.0;
+        p_system->vQ[0] = 0.0;
         p_system->vP = 0.0;
 
         int converged = 0;
@@ -862,7 +870,7 @@ int main(int argc, char *argv[])
                 // thermostat for 1st half step
                 if (0 == strcmp(p_runset->ensemble, "nvt"))
                 {
-                    nose_hoover(p_runset, p_system, nAtoms);
+                    nose_hoover_chain(p_runset, p_system, nAtoms);
                 }
 
                 // update velocity for 1st half step
@@ -943,7 +951,7 @@ int main(int argc, char *argv[])
                 // thermostat for 2nd half step
                 if (0 == strcmp(p_runset->ensemble, "nvt"))
                 {
-                    nose_hoover(p_runset, p_system, nAtoms);
+                    nose_hoover_chain(p_runset, p_system, nAtoms);
                 }
 
 
