@@ -57,4 +57,5 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 
 void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
                               int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
-                              int my_id, int num_procs, Metal *p_metal, long int count_nnz);
+                              int my_id, int num_procs, Metal *p_metal, long int count_nnz,
+                              Bicgstab *p_bicgstab);

@@ -255,6 +255,12 @@ typedef struct {
 } Metal;
 
 
+// vectors that will be used in BiCGSTAB solver
+typedef struct {
+    double *Ax, *r0, *r, *p, *v, *s, *t, *y, *z, *Kt, *K;
+} Bicgstab;
+
+
 // force field topology
 typedef struct {
     // bonded interaction, virtual sites, constraints

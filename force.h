@@ -99,5 +99,5 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 
 void mpi_force(Task *p_task, Topol *p_topol,
                Atom_Info* atom_info, Mol_Info* mol_info, 
-               RunSet* p_runset, Metal *p_metal, System *p_system,
+               RunSet* p_runset, Metal *p_metal, System *p_system, Bicgstab *p_bicgstab,
                int my_id, int num_procs, double** time_used);

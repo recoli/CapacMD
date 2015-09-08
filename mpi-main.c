@@ -586,10 +586,28 @@ int main(int argc, char *argv[])
     }
 
 
+    //=================== vectors for the BiCGSTAB solver =========================
+
+    double* data_bicgstab = my_malloc_2(sizeof(double) * n_mat * 11, "data_bicgstab");
+    Bicgstab  *p_bicgstab = my_malloc(sizeof(Bicgstab));
+
+    p_bicgstab->Ax = &(data_bicgstab[0]);
+    p_bicgstab->r0 = &(data_bicgstab[n_mat]);
+    p_bicgstab->r  = &(data_bicgstab[n_mat * 2]);
+    p_bicgstab->p  = &(data_bicgstab[n_mat * 3]);
+    p_bicgstab->v  = &(data_bicgstab[n_mat * 4]);
+    p_bicgstab->s  = &(data_bicgstab[n_mat * 5]);
+    p_bicgstab->t  = &(data_bicgstab[n_mat * 6]);
+    p_bicgstab->y  = &(data_bicgstab[n_mat * 7]);
+    p_bicgstab->z  = &(data_bicgstab[n_mat * 8]);
+    p_bicgstab->Kt = &(data_bicgstab[n_mat * 9]);
+    p_bicgstab->K  = &(data_bicgstab[n_mat * 10]);
+
+
     //================== compute forces ==========================
 
     mpi_force(p_task, p_topol, atom_info, mol_info,
-              p_runset, p_metal, p_system,
+              p_runset, p_metal, p_system, p_bicgstab,
               my_id, num_procs, time_used);
 
 
@@ -740,7 +758,7 @@ int main(int argc, char *argv[])
 
             // update forces
             mpi_force(p_task, p_topol, atom_info, mol_info,
-                       p_runset, p_metal, p_system,
+                      p_runset, p_metal, p_system, p_bicgstab,
                       my_id, num_procs, time_used);
 
             if (root_process == my_id) 
@@ -915,7 +933,7 @@ int main(int argc, char *argv[])
 
             // compute forces
             mpi_force(p_task, p_topol, atom_info, mol_info,
-                       p_runset, p_metal, p_system,
+                      p_runset, p_metal, p_system, p_bicgstab,
                       my_id, num_procs, time_used);
             
 
@@ -1109,6 +1127,7 @@ int main(int argc, char *argv[])
         p_metal->diag_relay = NULL;
     }
 
+    free(data_bicgstab);
 
 
     free(data_start_end);

@@ -251,7 +251,8 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 
 void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
                               int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
-                              int my_id, int num_procs, Metal *p_metal, long int count_nnz)
+                              int my_id, int num_procs, Metal *p_metal, long int count_nnz,
+                              Bicgstab *p_bicgstab)
 {
     double *val;
     long int *col_ind, *row_ind;
@@ -260,12 +261,10 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
     col_ind = p_metal->col_ind;
     row_ind = p_metal->row_ind;
 
-
     int n_metal = max_metal - min_metal + 1;
     const int root_process = 0;
 
     int i_metal, i;
-
 
     // A == relay
     // b == vec_ext
@@ -273,19 +272,17 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
     
     // At the beginning, each processor already has a copy of vec_pq
 
-    double* data = my_malloc_2(sizeof(double) * n_mat * 11, "data_precon_bicgstab");
-
-    double* Ax = &(data[0]);
-    double* r0 = &(data[n_mat]);
-    double* r  = &(data[n_mat * 2]);
-    double* p  = &(data[n_mat * 3]);
-    double* v  = &(data[n_mat * 4]);
-    double* s  = &(data[n_mat * 5]);
-    double* t  = &(data[n_mat * 6]);
-    double* y  = &(data[n_mat * 7]);
-    double* z  = &(data[n_mat * 8]);
-    double* Kt = &(data[n_mat * 9]);
-    double* K  = &(data[n_mat * 10]);
+    double* Ax = p_bicgstab->Ax;
+    double* r0 = p_bicgstab->r0;
+    double* r  = p_bicgstab->r;
+    double* p  = p_bicgstab->p;
+    double* v  = p_bicgstab->v;
+    double* s  = p_bicgstab->s;
+    double* t  = p_bicgstab->t;
+    double* y  = p_bicgstab->y;
+    double* z  = p_bicgstab->z;
+    double* Kt = p_bicgstab->Kt;
+    double* K  = p_bicgstab->K;
 
     double rho_old = 1.0;
     double omega = 1.0;
@@ -571,19 +568,5 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
             }
         }
     }
-
-    Ax = NULL;
-    r0 = NULL;
-    r  = NULL;
-    p  = NULL;
-    v  = NULL;
-    s  = NULL;
-    t  = NULL;
-    y  = NULL;
-    z  = NULL;
-    Kt = NULL;
-    K  = NULL;
-    free(data);
 }
-
 

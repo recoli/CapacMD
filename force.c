@@ -2096,7 +2096,7 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 
 void mpi_force(Task *p_task, Topol *p_topol,
                Atom_Info* atom_info, Mol_Info* mol_info, 
-               RunSet* p_runset, Metal *p_metal, System *p_system,
+               RunSet* p_runset, Metal *p_metal, System *p_system, Bicgstab *p_bicgstab,
                int my_id, int num_procs, double** time_used)
 {
     //double rCut     = p_runset->rCut;
@@ -2221,7 +2221,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
             // construct p_metal->mat_relay
             // also realloc memory for the CPIM matrix when necessary
             mpi_cpff_mat_relay_CRS(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs, 
-                                    &count_size, incr_size, &count_nnz);
+                                   &count_size, incr_size, &count_nnz);
 
 #ifdef DEBUG
             printf("count_nnz= %ld, count_size= %ld, memory_size= %zu MB, overhead= %.1f%%\n", 
@@ -2239,9 +2239,9 @@ void mpi_force(Task *p_task, Topol *p_topol,
             // using preconditioned BiCGSTAB
             {
                 mpi_precon_bicg_stab_CRS(p_task->start_metal[my_id], p_task->end_metal[my_id], 
-                                     p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
-                                     p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
-                                     my_id, num_procs, p_metal, count_nnz);
+                                         p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
+                                         p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
+                                         my_id, num_procs, p_metal, count_nnz, p_bicgstab);
             }
             // at the end of mpi_bicg_stab each proc has a copy of p_metal->vec_pq
 
