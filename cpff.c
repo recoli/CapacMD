@@ -162,7 +162,6 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
         }
 
 
-
         // note: e_x_metal, e_y_metal, e_z_metal and pot_metal in a.u.
         int i = i_metal - p_metal->min;
         p_metal->vec_ext[i * 3 + 0] = e_x_metal;
@@ -171,6 +170,17 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 
         p_metal->vec_ext[p_metal->num * 3 + i] = pot_metal;
 
+
+        // external electric field
+        // remember to convert from MD unit to a.u.
+        p_metal->vec_ext[i * 3 + 0] += p_runset->external_efield[0] * conv_fac_e;
+        p_metal->vec_ext[i * 3 + 1] += p_runset->external_efield[1] * conv_fac_e;
+        p_metal->vec_ext[i * 3 + 2] += p_runset->external_efield[2] * conv_fac_e;
+
+        double pot_external = p_runset->external_efield[0] * p_system->rx[i_metal] +
+                              p_runset->external_efield[1] * p_system->ry[i_metal] +
+                              p_runset->external_efield[2] * p_system->rz[i_metal];
+        p_metal->vec_ext[p_metal->num * 3 + i] -= pot_external * conv_fac_v;
     }
 
     // last element, total charge of nanoparticle
@@ -918,6 +928,26 @@ void mpi_cpff_force(Task *p_task, Metal *p_metal, RunSet *p_runset,
             }
         }
 
+
+        // external electric field
+
+        // force on the induced charge
+        double q = vec_pq[n_metal * 3 + i];
+        p_system->fx[i_metal] += p_runset->external_efield[0] * q;
+        p_system->fy[i_metal] += p_runset->external_efield[1] * q;
+        p_system->fz[i_metal] += p_runset->external_efield[2] * q;
+
+        // potential on the induced charge
+        p_system->potential[9] -= p_runset->external_efield[0] * q * p_system->rx[i_metal] +
+                                  p_runset->external_efield[1] * q * p_system->ry[i_metal] +
+                                  p_runset->external_efield[2] * q * p_system->rz[i_metal];
+
+        // force on the induced dipole is zero
+        // potential on the induced dipole
+        double p[3] = {vec_pq[i * 3], vec_pq[i * 3 + 1], vec_pq[i * 3 + 2]};
+        p_system->potential[9] -= p_runset->external_efield[0] * p[0] +
+                                  p_runset->external_efield[1] * p[1] +
+                                  p_runset->external_efield[2] * p[2];
     }
 }
 

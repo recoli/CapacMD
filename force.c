@@ -2276,6 +2276,18 @@ void mpi_force(Task *p_task, Topol *p_topol,
     //======== root processor ==========================
     if(my_id == root_process) 
     {
+        // external electric field
+        for(i = 0; i < p_topol->n_atoms; i++)
+        {
+            double qi = atom_info[i].charge;
+            p_system->fx[i] += p_runset->external_efield[0] * qi;
+            p_system->fy[i] += p_runset->external_efield[1] * qi;
+            p_system->fz[i] += p_runset->external_efield[2] * qi;
+            p_system->potential[9] -= p_runset->external_efield[0] * qi * p_system->rx[i] +
+                                      p_runset->external_efield[1] * qi * p_system->ry[i] +
+                                      p_runset->external_efield[2] * qi * p_system->rz[i];
+        }
+
 
         // receive nonbonded & QSC forces from slave processors
         for(an_id = 1; an_id < num_procs; an_id++) 

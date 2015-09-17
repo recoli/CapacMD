@@ -114,6 +114,12 @@ void read_settings(char *input_mdset, RunSet *p_runset, Metal *p_metal)
         else if (0 == strcmp(option, "fix_metal")) { p_metal->fix_pos  = atoi(value); }
         else if (0 == strcmp(option, "use_cpff" )) { p_metal->use_cpff = atoi(value); }
 
+        // input external electric field in V/nm, or eV/(e nm)
+        // converting to MD units kJ/mol/(e nm)
+        else if (0 == strcmp(option, "external_Ex")) { p_runset->external_efield[0] = atof(value) * EV2KJMOL; }
+        else if (0 == strcmp(option, "external_Ey")) { p_runset->external_efield[1] = atof(value) * EV2KJMOL; }
+        else if (0 == strcmp(option, "external_Ez")) { p_runset->external_efield[2] = atof(value) * EV2KJMOL; }
+
         else if (0 == strcmp(option, "")) { continue; }
         else    { printf("Warning: unkonwn option %s in %s\n", option, input_mdset); }
     }

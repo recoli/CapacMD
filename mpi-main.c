@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
     RunSet *p_runset = my_malloc(sizeof(RunSet));
     Metal  *p_metal  = my_malloc(sizeof(Metal));
 
+    p_runset->external_efield = my_malloc(sizeof(double) * DIM);
+
 
     // read md settings from input_mdset
     read_settings(input_mdset, p_runset, p_metal);
@@ -1057,6 +1059,8 @@ int main(int argc, char *argv[])
         free(time_used[an_id]);
     }
     free(time_used);
+
+    free(p_runset->external_efield);
 
     free(p_metal->cpff_chg);
     free(p_metal->start_NP);

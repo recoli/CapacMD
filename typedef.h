@@ -222,6 +222,8 @@ typedef struct {
     // wolf_sum constants
     double w_alpha, w_a2_sqrtPI, w_Const, w_erfc_arCut;
 
+    // external electric field
+    double *external_efield;
 } RunSet;
 
 

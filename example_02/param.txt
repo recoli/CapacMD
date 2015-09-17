@@ -1,0 +1,25 @@
+SCALE_LJ_QQ    0.50000000     0.83333333     
+
+MOLECULES      1         
+gold           1918
+
+gold_ATOMS          1         
+     0.000000   196.970000       0
+
+NONBONDED      1         1         
+ 1    0.00000000e+00      0.00000000e+00       
+
+gold_BONDS          0         
+gold_PAIRS          0         
+gold_ANGLES         0         
+gold_DIHEDRALS      0         
+gold_VSITES         0         
+gold_CSTRS          0
+
+MM_METAL  0  1917
+QSC_METAL  11  8  0.753087  53.581000  0.406510
+CPFF_METAL  39.529700  1.215900   ;  Note: atomic unit
+
+NANOPARTICLES     2
+START_END_CHG     0    958   0.0
+START_END_CHG   959   1917   0.0
