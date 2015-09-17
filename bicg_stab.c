@@ -41,7 +41,7 @@
 // Partial vector Ax is stored locally (no communication)
 //========================================================
 
-void mpi_mat_vec_CRS(const int count_nnz, const int n_mat, double *val, long int *col_ind, 
+void mpi_mat_vec_COO(const int count_nnz, const int n_mat, double *val, long int *col_ind, 
                      long int *row_ind, double* x, double* Ax)
 {
     // zero the Ax vector
@@ -249,7 +249,7 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 // http://en.wikipedia.org/wiki/Biconjugate_gradient_stabilized_method
 //======================================================================
 
-void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
+void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
                               int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
                               int my_id, int num_procs, Metal *p_metal, long int count_nnz,
                               Bicgstab *p_bicgstab)
@@ -301,7 +301,7 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
     double criteria = bTb * 1.0e-08;
 
     // Ax = A * x = relay * vec_pq
-    mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, vec_pq, Ax);
+    mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, vec_pq, Ax);
 
 
     // set initial values
@@ -405,7 +405,7 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      y, my_id, num_procs);
 
-        mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, y, v);
+        mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, y, v);
 
         // alpha = rho / (r0, v)
         double r0_v;
@@ -450,7 +450,7 @@ void mpi_precon_bicg_stab_CRS(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      z, my_id, num_procs);
 
-        mpi_mat_vec_CRS(count_nnz, n_mat, val, col_ind, row_ind, z, t);
+        mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, z, t);
 
         // compute Kt = K * t
         for(i_metal = start_metal; i_metal <= end_metal; i_metal ++)

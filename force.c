@@ -2220,7 +2220,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
 
             // construct p_metal->mat_relay
             // also realloc memory for the CPIM matrix when necessary
-            mpi_cpff_mat_relay_CRS(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs, 
+            mpi_cpff_mat_relay_COO(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs, 
                                    &count_size, incr_size, &count_nnz);
 
 #ifdef DEBUG
@@ -2238,7 +2238,7 @@ void mpi_force(Task *p_task, Topol *p_topol,
             // solve Ax=b
             // using preconditioned BiCGSTAB
             {
-                mpi_precon_bicg_stab_CRS(p_task->start_metal[my_id], p_task->end_metal[my_id], 
+                mpi_precon_bicg_stab_COO(p_task->start_metal[my_id], p_task->end_metal[my_id], 
                                          p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
                                          p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
                                          my_id, num_procs, p_metal, count_nnz, p_bicgstab);

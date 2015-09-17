@@ -248,7 +248,7 @@ typedef struct {
     //double **mat_relay; 
     double *vec_ext, *vec_pq;
 
-    // CPIM matrix in CRS format
+    // CPIM matrix in COO format
     double *diag_relay;
     double *val;
     long int *col_ind, *row_ind;
