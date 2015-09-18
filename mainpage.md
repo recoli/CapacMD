@@ -1,4 +1,4 @@
-CapacMD
+CapacMD {#mainpage}
 ---------
 
 ### Introduction
