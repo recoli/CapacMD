@@ -1,36 +1,23 @@
-/*! \mainpage CapacMD
-   
-    \section Introduction
+/** \file typedef.h
+    \author Xin Li
+    \date 2015/09
+    \version 1.0
 
-    CapacMD is a molecular dynamics simulation engine using capacitance-polarizability force field. 
-    See http://www.theochem.kth.se/~lixin/capacmd/index.html
+    \brief   define constants and structure types
 
-    Related paper: X. Li and H. Agren, J. Phys. Chem. C, 2015, 119, 19430-19437. 
-    http://pubs.acs.org/doi/abs/10.1021/acs.jpcc.5b04347
-
-    \section Usage
-   
-    \subsection subsec_1 1: Run the simulation
-    mpirun -np 4 ./mpi-main -gro init.gro -par param.txt -mds mdset.txt
-*/
-
-
-/*! @file    typedef.h
-    @brief   define constants and structure types
-
+    \copyright 
     This file is part of the CapacMD program.                                   
     Copyright (C) 2015 Xin Li <lixin.reco@gmail.com>                            
                                                                               
+    \copyright 
     This program is free software; you can redistribute it and/or modify        
     it under the terms of the GNU General Public License as published by        
     the Free Software Foundation; either version 2 of the License, or           
     (at your option) any later version.                                         
-                                                                              
     This program is distributed in the hope that it will be useful,             
     but WITHOUT ANY WARRANTY; without even the implied warranty of              
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               
     GNU General Public License for more details.                                
-                                                                              
     You should have received a copy of the GNU General Public License along     
     with this program; if not, see http://www.gnu.org/licenses/.
 */
@@ -43,17 +30,18 @@
 /// dimension
 #define DIM 3
 
-/// PI
+/// pi
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-/// 2.0 * M_PI
+/// 2.0 * pi
 #define TWO_PI 6.28318530717959
 
-/// 1.0 / sqrt(M_PI)
+/// 1.0 / sqrt(pi)
 #define INV_SQRT_PI 0.564189583547756
 
+/// \brief Coulomb constant
 /// 1.0 / (4.0 * M_PI * epsilon_0), in MD unit.
 ///
 /// Physical constants from 2010 CODATA:
@@ -74,7 +62,6 @@
 /// fQQ in MD unit is 138.935457696552 [kJ mol^-1 nm e^-2].
 ///
 /// In this program we use FQQ = 138.935457696552.
-
 #define FQQ 138.935457696552
 
 /// 1.0 eV = 96.4853363969351 kJ/mol.
@@ -83,11 +70,11 @@
 /// 1.0 nm = 18.8972612456506 Bohr.
 #define NM2BOHR 18.8972612456506
 
-/// Boltzmann constant in MD unit [kJ mol^-1 K^-1].
+/// \brief Boltzmann constant in MD unit.
 /// kB = 1.3806488e-3 * 6.02214129 kJ mol^-1 K^-1.
 #define K_BOLTZ 0.00831446214546895
 
-/// Pressure converting factor.
+/// \brief Pressure converting factor.
 /// 1 bar = 1e+05 Pa = 1e+05 N/m^2 = 1e+05 J/m^3;
 /// 1 kJ mol^-1 nm^-3 = 16.6053892103219 bar.
 #define P_CONST 16.6053892103219
@@ -104,51 +91,58 @@
 #define THRSHD_P  1.0e-15
 
 
-/// vector
+/// \brief vector
+/// \details has Cartesian x,y,z components
 typedef struct {
     double x, y, z;
 } Vec_R;
 
-/// bond force
+/// \brief bond stretching force
+/// \details has two vectors fi and fj
 typedef struct {
     Vec_R fi, fj;
 } Vec_2;
 
-/// angle force
+/// \brief angle bending force
+/// \details has three vectors fi, fj and fk
 typedef struct {
     Vec_R fi, fj, fk;
 } Vec_3;
 
-/// dihedral force
+/// \brief dihedral force
+/// \details has four vectors fi, fj, fk and fl
 typedef struct {
     Vec_R fi, fj, fk, fl;
 } Vec_4;
 
-/// nonbonded force
+/// \brief nonbonded force (VDW & Coulomb)
+/// \details has two Vec_2 components lj and qq
 typedef struct {
     Vec_2 lj, qq;
 } Vec_nb;
 
-/// nonbonded parameters
+/// \brief nonbonded parameters
 typedef struct {
     double charge, mass;
     int atomtype;
 } AtomParam;
 
-/// virtual site, type 4 (as in TIP5P water model)
+/// \brief virtual site, type 4 (as in TIP5P water model)
+/// \details four atoms, three parameters for construction of virtual sites
 typedef struct {
     int atom_i, atom_j, atom_k, atom_s;
     double a, b, c;
 } VSite_4;
 
-/// constraint
+/// \brief constraint
+/// \details two atoms, one distance for a constraint
 typedef struct {
     int atom_i, atom_j;
     double r;
 } Constraint;
 
 
-/// atomic info
+/// \brief atomic info
 typedef struct {
     double charge, mass, inv_mass;
     int atomtype, iAtom, iMol, molID, resID, is_metal;
@@ -156,20 +150,21 @@ typedef struct {
 } Atom_Info;
 
 
-/// molecular info
+/// \brief molecular info
+/// \details start and end indices of atoms in a molecule
 typedef struct {
     int mini, maxi;
 } Mol_Info;
 
 
-/// bond parameters
+/// bond stretching parameters
 typedef struct {
     int atom_i, atom_j, funct;
     double b0, kb, D, beta;
 } BondParam;
 
 
-/// angle parameters
+/// angle bending parameters
 typedef struct {
     int atom_i, atom_j, atom_k, funct;
     double a0, ka, b0_ub, kb_ub;
@@ -202,13 +197,6 @@ typedef struct {
     int funct;
     double C12, C6, A, B;
 } NonbondedParam;
-
-
-/// energy minimization settings
-typedef struct {
-    int steps;
-    double length, tol;
-} EM_Set;
 
 
 /// MD settings
@@ -254,8 +242,15 @@ typedef struct {
 
 /// metal parameters
 typedef struct {
-    int min, max, num;
-    int fix_pos, use_cpff, n_NPs;
+    /// \name start and end indices
+    ///@{
+    int min, max;
+    ///@}
+
+    int num; ///< number of metal atoms;
+    int fix_pos; ///< fix the position of metal atoms?
+    int use_cpff; ///< use capacitance-polarizability force field?
+    int n_NPs; ///< number of nanoparticles
 
     /// \name quantum Sutton-Chen potential
     ///@{
@@ -264,7 +259,7 @@ typedef struct {
     double *inv_sqrt_dens;
     ///@}
 
-    /// \name CPFF parameters
+    /// \name capacitance-polarizability parameters
     ///@{
     double cpff_polar, cpff_capac; 
     double inv_polar, inv_capac;
@@ -277,7 +272,7 @@ typedef struct {
     int *start_NP, *end_NP;
     ///@}
 
-    /// \name CPIM arrays: external field/potential, induced dipole/charge.
+    /// \name CPIM vectors: external field/potential & induced dipole/charge.
     ///@{
     double *vec_ext, *vec_pq;
     ///@}
@@ -337,13 +332,9 @@ typedef struct {
     DihedralParam  **dihedral_param;
     ///@}
 
-    /// virtual sites (type 4, as in TIP5P)
-    VSite_4        **vsite_4;
-    /// constraints
-    Constraint     **constraint;
-    /// VDW parameters
-    NonbondedParam **nonbonded_param;
-
+    VSite_4        **vsite_4; ///< virtual sites (type 4, as in TIP5P)
+    Constraint     **constraint; ///< constraint
+    NonbondedParam **nonbonded_param; ///< VDW parameters
 } Topol;
 
 
@@ -380,6 +371,7 @@ typedef struct {
     double *old_fx, *old_fy, *old_fz;
     double *sx, *sy, *sz;
     ///@}
+
     /// \name position from previous step (for constraint algorithm)
     ///@{
     double *old_rx, *old_ry, *old_rz;
@@ -405,4 +397,3 @@ typedef struct {
     int    ndf;
     ///@}
 } System;
-

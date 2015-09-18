@@ -1,27 +1,26 @@
-/*****************************************************************************
- *  This file is part of the CapacMD program.                                *  
- *  Copyright (C) 2015 Xin Li <lixin.reco@gmail.com>                         *  
- *                                                                           *
- *  Filename:  file.c                                                        *
- *  Function:  read input files, write trajectories and charge/dipoles       *
- *  Version:   1.0                                                           *
- *  Updated:   2015-Jun-30                                                   *
- *  License:   GNU Public License, version 2                                 *
- *                                                                           *  
- *  This program is free software; you can redistribute it and/or modify     *  
- *  it under the terms of the GNU General Public License as published by     *  
- *  the Free Software Foundation; either version 2 of the License, or        *  
- *  (at your option) any later version.                                      *  
- *                                                                           *
- *  This program is distributed in the hope that it will be useful,          *  
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of           *  
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *  
- *  GNU General Public License for more details.                             *  
- *                                                                           *
- *  You should have received a copy of the GNU General Public License along  *  
- *  with this program; if not, write to the Free Software Foundation, Inc.,  *  
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.              *  
- *****************************************************************************/
+/*! \file file.c                                                         
+    \author Xin Li
+    \date 2015/09
+    \version 1.0
+
+    \brief read input files, write trajectories and charge/dipoles        
+
+    \copyright 
+    This file is part of the CapacMD program.                                   
+    Copyright (C) 2015 Xin Li <lixin.reco@gmail.com>                            
+                                                                              
+    \copyright 
+    This program is free software; you can redistribute it and/or modify        
+    it under the terms of the GNU General Public License as published by        
+    the Free Software Foundation; either version 2 of the License, or           
+    (at your option) any later version.                                         
+    This program is distributed in the hope that it will be useful,             
+    but WITHOUT ANY WARRANTY; without even the implied warranty of              
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               
+    GNU General Public License for more details.                                
+    You should have received a copy of the GNU General Public License along     
+    with this program; if not, see http://www.gnu.org/licenses/.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,25 +29,27 @@
 #include "typedef.h"
 #include "my_malloc.h"
 
-//=============
-// substr in c
-//=============
-
+/// \brief substr in C
+/// \fn void substr(char *dest, const char *src, unsigned int start, unsigned int cnt) 
+/// \param dest destination string
+/// \param src source string
+/// \param start starting position in source string
+/// \param cnt length of destination string
 void substr(char *dest, const char *src, unsigned int start, unsigned int cnt) 
 {
     strncpy(dest, src + start, cnt + 1);
     dest[cnt] = '\0';
 }
 
-//==============================
-// read the next line from file
-//==============================
-
+/// \brief read the next line from file
+/// \fn void read_next_line(FILE *file_par, char *line, char *subline)
+/// \param file_par file handle of parameter file
+/// \param line the line read from parameter file
+/// \param subline first word in the read line
 void read_next_line(FILE *file_par, char *line, char *subline)
 {
     while(1)
     {
-        // max_string_length = 1024
         if (fgets(line, MAX_STR_LEN, file_par) != NULL)
         {
             // check if line is blank line and
@@ -65,10 +66,11 @@ void read_next_line(FILE *file_par, char *line, char *subline)
     }
 }
 
-//==================================
-// read md options from input_mdset
-//==================================
-
+/// \brief read md options from input_mdset
+/// \fn void read_settings(char *input_mdset, RunSet *p_runset, Metal *p_metal)
+/// \param input_mdset name of the mdset input file
+/// \param p_runset pointer to RunSet data structure
+/// \param p_metal pointer to Metal data structure
 void read_settings(char *input_mdset, RunSet *p_runset, Metal *p_metal)
 {
     FILE* f_set;
@@ -127,10 +129,12 @@ void read_settings(char *input_mdset, RunSet *p_runset, Metal *p_metal)
     fclose(f_set);
 }
 
-//=====================
-// read input_gro file
-//=====================
-
+/// \brief read input_gro file
+/// \fn void read_gro(char *input_gro, System *p_system, int *ptr_nAtoms, Atom_Info *atom_info)
+/// \param input_gro name of gro input file
+/// \param p_system pointer to System data structure
+/// \param ptr_nAtoms pointer to number of atoms
+/// \param atom_info array of atomic information
 void read_gro(char *input_gro, System *p_system,
               int *ptr_nAtoms, Atom_Info *atom_info)
 {
@@ -198,10 +202,13 @@ void read_gro(char *input_gro, System *p_system,
     fclose(gro);
 }
 
-//========================
-// write to traj.gro file
-//========================
-
+/// \brief write to traj.gro file
+/// \fn void write_gro(FILE *file_gro, System *p_system, int nAtoms, Atom_Info *atom_info, int step)
+/// \param file_gro name of gro output file
+/// \param p_system pointer to System data structure
+/// \param nAtoms number of atoms
+/// \param atom_info array of atomic information
+/// \param step number of MD step
 void write_gro(FILE *file_gro, System *p_system,
                int nAtoms, Atom_Info *atom_info, int step)
 {
@@ -221,10 +228,11 @@ void write_gro(FILE *file_gro, System *p_system,
             p_system->box[0], p_system->box[1], p_system->box[2]);
 }
 
-//================================================
-// write metal dipole-charge vector to vec_pq.txt
-//================================================
-
+/// \brief write metal dipole-charge vector to vec_pq.txt
+/// \fn void write_vec_pq(FILE *file_pq, Metal *p_metal, int step)
+/// \param file_pq name of dipole/charge output file
+/// \param p_metal pointer to Metal data structure
+/// \param step number of MD step
 void write_vec_pq(FILE *file_pq, Metal *p_metal, int step)
 {
     int n_metal = p_metal->num;
@@ -252,10 +260,12 @@ void write_vec_pq(FILE *file_pq, Metal *p_metal, int step)
 }
 
 
-//=================================
-// write to binary trajectory file
-//=================================
-
+/// \brief write to binary trajectory file
+/// \fn void write_binary(FILE *file_dat, System *p_system, int nAtoms, int step)
+/// \param file_dat name of binary output trajectory file
+/// \param p_system pointer to System data structure
+/// \param nAtoms number of atoms
+/// \param step number of MD step
 void write_binary(FILE *file_dat, System *p_system, int nAtoms, int step)
 {
     fwrite(&nAtoms, sizeof(int), 1, file_dat);
@@ -268,10 +278,11 @@ void write_binary(FILE *file_dat, System *p_system, int nAtoms, int step)
 }
 
 
-//==============================================
-// read force field parameters from input_param
-//==============================================
-
+/// \brief read force field parameters from input_param
+/// \fn void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
+/// \param input_param name of input parameter file
+/// \param p_topol pointer to Topol data structure
+/// \param p_metal pointer to Metal data structure
 void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
 {
     FILE* file_par;
@@ -550,10 +561,11 @@ void read_param_1(char *input_param, Topol *p_topol, Metal* p_metal)
     fclose( file_par );
 }
 
-//=========================================
-// read FF parameters (2) from input_param
-//=========================================
-
+/// \brief read FF parameters (2) from input_param
+/// \fn void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
+/// \param input_param name of input parameter file
+/// \param p_topol pointer to Topol data structure
+/// \param p_metal pointer to Metal data structure
 void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
 {
     FILE *file_par;
@@ -1010,10 +1022,12 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
     }
 }
 
-//=============================================
-// assign molecular and atomic indices
-//=============================================
-
+/// \brief assign molecular and atomic indices
+/// \fn void assign_indices(Topol *p_topol, Metal *p_metal, Atom_Info* atom_info, Mol_Info* mol_info)
+/// \param p_topol pointer to Topol data structure
+/// \param p_metal pointer to Metal data structure
+/// \param atom_info array of atomic information
+/// \param mol_info array of molecular information
 void assign_indices(Topol *p_topol, Metal *p_metal,
                     Atom_Info* atom_info, Mol_Info* mol_info)
 {
