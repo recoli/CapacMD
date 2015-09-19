@@ -9,5 +9,12 @@ Original paper:
 
 ![TOC](http://www.theochem.kth.se/~lixin/capacmd/toc-400.png)
 
+### Download
+Current version: [CapacMD-current.zip](http://www.theochem.kth.se/~lixin/capacmd/CapacMD-current.zip)
+
 ### Usage
 `mpirun -np 4 ./mpi-main -gro init.gro -par param.txt -mds mdset.txt`
+
+### Examples
+1. An icosahedral gold nanoparticle in water.
+2. Two gold nanoparticles in an external electric field.

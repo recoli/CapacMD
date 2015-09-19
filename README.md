@@ -11,3 +11,7 @@ Original paper:
 
 ### Usage
 `mpirun -np 4 ./mpi-main -gro init.gro -par param.txt -mds mdset.txt`
+
+### Examples
+1. An icosahedral gold nanoparticle in water.
+2. Two gold nanoparticles in an external electric field.
