@@ -2220,12 +2220,9 @@ void mpi_force(Task *p_task, Topol *p_topol,
 
             // solve Ax=b
             // using preconditioned BiCGSTAB
-            {
-                mpi_precon_bicg_stab_COO(p_task->start_metal[my_id], p_task->end_metal[my_id], 
-                                         p_metal->min, p_metal->max, p_metal->n_NPs, n_mat, 
-                                         p_metal->diag_relay, p_metal->vec_ext, p_metal->vec_pq, 
-                                         my_id, num_procs, p_metal, count_nnz, p_bicgstab);
-            }
+            mpi_precon_bicg_stab_COO(p_task, p_metal, n_mat, 
+                                     my_id, num_procs, count_nnz, p_bicgstab);
+
             // at the end of mpi_bicg_stab each proc has a copy of p_metal->vec_pq
 
 

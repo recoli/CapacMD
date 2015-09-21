@@ -250,16 +250,24 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 // http://en.wikipedia.org/wiki/Biconjugate_gradient_stabilized_method
 //======================================================================
 
-void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
-                              int n_mat, double* diag_relay, double* vec_ext, double* vec_pq,
-                              int my_id, int num_procs, Metal *p_metal, long int count_nnz,
-                              Bicgstab *p_bicgstab)
+void mpi_precon_bicg_stab_COO(Task *p_task, Metal *p_metal, int n_mat, int my_id, int num_procs, 
+                              long int count_nnz, Bicgstab *p_bicgstab)
 {
+    int start_metal = p_task->start_metal[my_id];
+    int end_metal   = p_task->end_metal[my_id];
+    int min_metal   = p_metal->min;
+    int max_metal   = p_metal->max;
+    int n_NPs       = p_metal->n_NPs;
+
+    double *diag_relay = p_metal->diag_relay;
+    double *vec_ext    = p_metal->vec_ext;
+    double *vec_pq     = p_metal->vec_pq;
+
     int n_metal = max_metal - min_metal + 1;
     const int root_process = 0;
 
     int i_metal, i;
-
+    
     // A == relay
     // b == vec_ext
     // x == vec_pq
