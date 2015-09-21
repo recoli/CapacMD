@@ -101,6 +101,9 @@ int main(int argc, char *argv[])
     Metal  *p_metal  = my_malloc(sizeof(Metal));
 
     p_runset->external_efield = my_malloc(sizeof(double) * DIM);
+    p_runset->external_efield[0] = 0.0;
+    p_runset->external_efield[1] = 0.0;
+    p_runset->external_efield[2] = 0.0;
 
 
     // read md settings from input_mdset
