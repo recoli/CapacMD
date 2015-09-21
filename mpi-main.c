@@ -97,10 +97,10 @@ int main(int argc, char *argv[])
     //========= define variables and read MD settings ===========
 
     // varialbles to read from input_mdset
-    RunSet *p_runset = my_malloc(sizeof(RunSet));
-    Metal  *p_metal  = my_malloc(sizeof(Metal));
+    RunSet *p_runset = (RunSet *)my_malloc(sizeof(RunSet));
+    Metal  *p_metal  = (Metal  *)my_malloc(sizeof(Metal));
 
-    p_runset->external_efield = my_malloc(sizeof(double) * DIM);
+    p_runset->external_efield = (double *)my_malloc(sizeof(double) * DIM);
     p_runset->external_efield[0] = 0.0;
     p_runset->external_efield[1] = 0.0;
     p_runset->external_efield[2] = 0.0;
@@ -127,10 +127,10 @@ int main(int argc, char *argv[])
     // time_used[8] = CPIM force
     // time_used[10] = QSC density communication
     
-    double **time_used = my_malloc(sizeof(double *) * num_procs);
+    double **time_used = (double **)my_malloc(sizeof(double *) * num_procs);
     for(an_id = 0; an_id < num_procs; ++ an_id)
     {
-        time_used[an_id] = my_malloc(sizeof(double) * 15);
+        time_used[an_id] = (double *)my_malloc(sizeof(double) * 15);
 
         int it;
         for(it = 0; it < 15; ++ it)
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 
     //============== read force field parameters from param.txt =================
     
-    Topol *p_topol = my_malloc(sizeof(Topol));
+    Topol *p_topol = (Topol *)my_malloc(sizeof(Topol));
 
     int mol, atom;
     int number_VSites, number_Cstrs;
@@ -234,26 +234,26 @@ int main(int argc, char *argv[])
     // allocate memory for arrays
 
     // CPIM charge and indices
-    p_metal->cpff_chg = my_malloc(p_metal->n_NPs * sizeof(double));
-    p_metal->start_NP = my_malloc(p_metal->n_NPs * sizeof(int));
-    p_metal->end_NP   = my_malloc(p_metal->n_NPs * sizeof(int));
+    p_metal->cpff_chg = (double *)my_malloc(p_metal->n_NPs * sizeof(double));
+    p_metal->start_NP = (int *)my_malloc(p_metal->n_NPs * sizeof(int));
+    p_metal->end_NP   = (int *)my_malloc(p_metal->n_NPs * sizeof(int));
 
 
     // molecules and atom parameters
     // For a given molecule type (mol from 0 to p_topol->mol_types-1):
     // p_topol->atom_num[mol]:  its number of atoms
     // p_topol->mol_num[mol]:   the number of this type of molecule in the system
-    p_topol->atom_num   = my_malloc(p_topol->mol_types * sizeof(int));
-    p_topol->mol_num    = my_malloc(p_topol->mol_types * sizeof(int));
-    p_topol->atom_param = my_malloc(p_topol->mol_types * sizeof(AtomParam *));
+    p_topol->atom_num   = (int *)my_malloc(p_topol->mol_types * sizeof(int));
+    p_topol->mol_num    = (int *)my_malloc(p_topol->mol_types * sizeof(int));
+    p_topol->atom_param = (AtomParam **)my_malloc(p_topol->mol_types * sizeof(AtomParam *));
 
 
     // van der Waals interaction parameters
     NonbondedParam *data_nonbonded = 
-        my_malloc_2(p_topol->n_types * p_topol->n_types * sizeof(NonbondedParam), "data_nonbonded");
+        (NonbondedParam *)my_malloc(p_topol->n_types * p_topol->n_types * sizeof(NonbondedParam));
 
     p_topol->nonbonded_param =
-        my_malloc(p_topol->n_types * sizeof(NonbondedParam *));
+        (NonbondedParam **)my_malloc(p_topol->n_types * sizeof(NonbondedParam *));
 
     int i_type;
     for(i_type = 0; i_type < p_topol->n_types; ++ i_type)
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 
 
     // bonded potentials: bond, pair, angle, dihedral
-    int *data_bonded = my_malloc(sizeof(int) * p_topol->mol_types * 6);
+    int *data_bonded = (int *)my_malloc(sizeof(int) * p_topol->mol_types * 6);
     p_topol->n_bonds       = &(data_bonded[0]);
     p_topol->n_pairs       = &(data_bonded[p_topol->mol_types]);
     p_topol->n_angles      = &(data_bonded[p_topol->mol_types * 2]);
@@ -272,22 +272,22 @@ int main(int argc, char *argv[])
     p_topol->n_vsites      = &(data_bonded[p_topol->mol_types * 4]);
     p_topol->n_constraints = &(data_bonded[p_topol->mol_types * 5]);
 
-    p_topol->vsite_funct = my_malloc(p_topol->mol_types * sizeof(int *)) ;
+    p_topol->vsite_funct = (int **)my_malloc(p_topol->mol_types * sizeof(int *)) ;
 
-    p_topol->bond_param     = my_malloc(p_topol->mol_types * sizeof(BondParam *));
-    p_topol->pair_param     = my_malloc(p_topol->mol_types * sizeof(PairParam *)) ;
-    p_topol->angle_param    = my_malloc(p_topol->mol_types * sizeof(AngleParam *));
-    p_topol->dihedral_param = my_malloc(p_topol->mol_types * sizeof(DihedralParam *)) ;
-    p_topol->vsite_4        = my_malloc(p_topol->mol_types * sizeof(VSite_4 *)) ;
-    p_topol->constraint     = my_malloc(p_topol->mol_types * sizeof(Constraint *)) ;
+    p_topol->bond_param     = (BondParam **)my_malloc(p_topol->mol_types * sizeof(BondParam *));
+    p_topol->pair_param     = (PairParam **)my_malloc(p_topol->mol_types * sizeof(PairParam *)) ;
+    p_topol->angle_param    = (AngleParam **)my_malloc(p_topol->mol_types * sizeof(AngleParam *));
+    p_topol->dihedral_param = (DihedralParam **)my_malloc(p_topol->mol_types * sizeof(DihedralParam *)) ;
+    p_topol->vsite_4        = (VSite_4 **)my_malloc(p_topol->mol_types * sizeof(VSite_4 *)) ;
+    p_topol->constraint     = (Constraint **)my_malloc(p_topol->mol_types * sizeof(Constraint *)) ;
 
-    p_topol->exclude = my_malloc(p_topol->mol_types * sizeof(int **)) ;
+    p_topol->exclude = (int ***)my_malloc(p_topol->mol_types * sizeof(int **)) ;
 
 
     // Quantum Sutton-Chen densities for metal
     if (p_metal->min >=0 && p_metal->max >= p_metal->min)
     {
-        p_metal->inv_sqrt_dens = my_malloc(sizeof(double) * p_metal->num);
+        p_metal->inv_sqrt_dens = (double *)my_malloc(sizeof(double) * p_metal->num);
     }
 
 
@@ -385,9 +385,9 @@ int main(int argc, char *argv[])
 
     //=========== distribute molecules/atoms/metals among the procs ==============
 
-    Task *p_task = my_malloc(sizeof(Task));
+    Task *p_task = (Task *)my_malloc(sizeof(Task));
 
-    int *data_start_end = my_malloc(sizeof(int) * num_procs * 6);
+    int *data_start_end = (int *)my_malloc(sizeof(int) * num_procs * 6);
     p_task->start_mol   = &(data_start_end[0]);
     p_task->end_mol     = &(data_start_end[num_procs]);
     p_task->start_atom  = &(data_start_end[num_procs * 2]);
@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
     find_start_end(p_task->start_atom,  p_task->end_atom,  nAtoms,       num_procs);
     find_start_end(p_task->start_metal, p_task->end_metal, p_metal->num, num_procs);
 
-    long int *data_long_start_end = my_malloc(sizeof(long int) * num_procs * 2);
+    long int *data_long_start_end = (long int *)my_malloc(sizeof(long int) * num_procs * 2);
     p_task->start_pair = &(data_long_start_end[0]);
     p_task->end_pair   = &(data_long_start_end[num_procs]);
 
@@ -418,15 +418,15 @@ int main(int argc, char *argv[])
     // mol_info[im].mini:  the index of its first atom in the system
     // mol_info[im].maxi:  the index of its last atom in the system
     
-    Atom_Info *atom_info = my_malloc(nAtoms * sizeof(Atom_Info));
-    Mol_Info  *mol_info  = my_malloc(nMols  * sizeof(Mol_Info));
+    Atom_Info *atom_info = (Atom_Info *)my_malloc(nAtoms * sizeof(Atom_Info));
+    Mol_Info  *mol_info  = (Mol_Info  *)my_malloc(nMols  * sizeof(Mol_Info));
 
     assign_indices(p_topol, p_metal, atom_info, mol_info);
 
 
     //======= allocate memory for coordinates, velocities and forces ==========
 
-    System *p_system = my_malloc(sizeof(System));
+    System *p_system = (System *)my_malloc(sizeof(System));
 
     // potential energy
     // p_system->potential[0] = total energy
@@ -445,17 +445,17 @@ int main(int argc, char *argv[])
     // p_system->potential[13] = CPIM metal charge - metal dipole
     // p_system->potential[14] = CPIM metal dipole - metal dipole
     
-    double *data_potential = my_malloc(sizeof(double) * 15 * 2);
+    double *data_potential = (double *)my_malloc(sizeof(double) * 15 * 2);
     p_system->potential   = &(data_potential[0]);
     p_system->partial_pot = &(data_potential[15]);
     p_system->old_potential = 0.0;
 
 
     // virial tensor
-    p_system->virial      = my_malloc(DIM * sizeof(double*));
-    p_system->partial_vir = my_malloc(DIM * sizeof(double*));
+    p_system->virial      = (double **)my_malloc(DIM * sizeof(double*));
+    p_system->partial_vir = (double **)my_malloc(DIM * sizeof(double*));
 
-    double *data_vir = my_malloc(DIM*2 * DIM * sizeof(double));
+    double *data_vir = (double *)my_malloc(DIM*2 * DIM * sizeof(double));
     int i;
     for (i = 0; i < DIM; ++ i)
     {
@@ -469,11 +469,11 @@ int main(int argc, char *argv[])
     // "p_system->box" has six elements
     // the first three are length in x, y, z
     // the second three are half of the length in x, y, z
-    p_system->box = my_malloc(sizeof(double) * DIM*2);
+    p_system->box = (double *)my_malloc(sizeof(double) * DIM*2);
 
 
     // coordinates, velocities and forces
-    double *data_rvf = my_malloc_2(nAtoms*7 * DIM * sizeof(double), "data_rvf");
+    double *data_rvf = (double *)my_malloc(nAtoms*7 * DIM * sizeof(double));
             
     p_system->rx = &(data_rvf[0]);
     p_system->ry = &(data_rvf[nAtoms]);
@@ -512,8 +512,8 @@ int main(int argc, char *argv[])
     
     // vQ and vP are "velocities" of the thermostat/barostat particles
     p_system->num_nhc = 10; // number of NH-chains hard-coded as 10
-    p_system->vQ = my_malloc(sizeof(double) * p_system->num_nhc);
-    p_system->aQ = my_malloc(sizeof(double) * p_system->num_nhc);
+    p_system->vQ = (double *)my_malloc(sizeof(double) * p_system->num_nhc);
+    p_system->aQ = (double *)my_malloc(sizeof(double) * p_system->num_nhc);
     int i_nhc;
     for (i_nhc = 0; i_nhc < p_system->num_nhc; ++ i_nhc)
     {
@@ -575,7 +575,7 @@ int main(int argc, char *argv[])
     // initialize mat_relay, vec_ext and vec_pq
     if (p_metal->min >=0 && p_metal->max >= p_metal->min)
     {
-        data_relay = my_malloc_2(sizeof(double) * n_mat * 3, "data_relay");
+        data_relay = (double *)my_malloc(sizeof(double) * n_mat * 3);
 
         p_metal->vec_pq  = &(data_relay[0]);
         p_metal->vec_ext = &(data_relay[n_mat]);
@@ -593,8 +593,8 @@ int main(int argc, char *argv[])
 
     //=================== vectors for the BiCGSTAB solver =========================
 
-    double* data_bicgstab = my_malloc_2(sizeof(double) * n_mat * 11, "data_bicgstab");
-    Bicgstab  *p_bicgstab = my_malloc(sizeof(Bicgstab));
+    double* data_bicgstab = (double *)my_malloc(sizeof(double) * n_mat * 11);
+    Bicgstab  *p_bicgstab = (Bicgstab *)my_malloc(sizeof(Bicgstab));
 
     p_bicgstab->Ax = &(data_bicgstab[0]);
     p_bicgstab->r0 = &(data_bicgstab[n_mat]);

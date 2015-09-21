@@ -2214,9 +2214,9 @@ void mpi_force(Task *p_task, Topol *p_topol,
             long int count_nnz = 0;
 
             // allocate memory for the CPIM matrix
-            p_metal->val     = my_malloc_2(sizeof(double)   * count_size, "val");
-            p_metal->col_ind = my_malloc_2(sizeof(long int) * count_size, "col_ind");
-            p_metal->row_ind = my_malloc_2(sizeof(long int) * count_size, "row_ind");
+            p_metal->val     = (double *)my_malloc(sizeof(double)   * count_size);
+            p_metal->col_ind = (long int *)my_malloc(sizeof(long int) * count_size);
+            p_metal->row_ind = (long int *)my_malloc(sizeof(long int) * count_size);
 
             // construct p_metal->mat_relay
             // also realloc memory for the CPIM matrix when necessary

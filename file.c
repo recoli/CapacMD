@@ -599,7 +599,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->atom_num[mol]);
 
-        p_topol->atom_param[mol] = my_malloc(p_topol->atom_num[mol] * sizeof(AtomParam));
+        p_topol->atom_param[mol] = (AtomParam *)my_malloc(p_topol->atom_num[mol] * sizeof(AtomParam));
         int atom;
         for (atom = 0; atom < p_topol->atom_num[mol]; ++ atom) 
         {
@@ -702,10 +702,10 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         int funct;
 
         // exclusions
-        p_topol->exclude[mol] = my_malloc(p_topol->atom_num[mol] * sizeof(int *));
+        p_topol->exclude[mol] = (int **)my_malloc(p_topol->atom_num[mol] * sizeof(int *));
         for (atom_i = 0; atom_i < p_topol->atom_num[mol]; ++ atom_i) 
         {
-            p_topol->exclude[mol][atom_i] = my_malloc(p_topol->atom_num[mol] * sizeof(int));
+            p_topol->exclude[mol][atom_i] = (int *)my_malloc(p_topol->atom_num[mol] * sizeof(int));
             for (atom_j = 0; atom_j < p_topol->atom_num[mol]; ++ atom_j) 
             {
                 p_topol->exclude[mol][atom_i][atom_j] = 0;
@@ -716,7 +716,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_bonds[mol]);
 
-        p_topol->bond_param[mol] = my_malloc(p_topol->n_bonds[mol] * sizeof(BondParam));
+        p_topol->bond_param[mol] = (BondParam *)my_malloc(p_topol->n_bonds[mol] * sizeof(BondParam));
 
         for (iBond = 0; iBond < p_topol->n_bonds[mol]; ++ iBond)
         {
@@ -768,7 +768,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_pairs[mol]);
 
-        p_topol->pair_param[mol] = my_malloc(p_topol->n_pairs[mol] * sizeof(PairParam));
+        p_topol->pair_param[mol] = (PairParam *)my_malloc(p_topol->n_pairs[mol] * sizeof(PairParam));
 
         for (iPair = 0; iPair < p_topol->n_pairs[mol]; ++ iPair)
         {
@@ -814,7 +814,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_angles[mol]);
 
-        p_topol->angle_param[mol] = my_malloc(p_topol->n_angles[mol] * sizeof(AngleParam));
+        p_topol->angle_param[mol] = (AngleParam *)my_malloc(p_topol->n_angles[mol] * sizeof(AngleParam));
 
         for (iAngle = 0; iAngle < p_topol->n_angles[mol]; ++ iAngle)
         {
@@ -867,7 +867,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_dihedrals[mol]);
 
-        p_topol->dihedral_param[mol] = my_malloc(p_topol->n_dihedrals[mol] * sizeof(DihedralParam));
+        p_topol->dihedral_param[mol] = (DihedralParam *)my_malloc(p_topol->n_dihedrals[mol] * sizeof(DihedralParam));
 
         for (iDihedral = 0; iDihedral < p_topol->n_dihedrals[mol]; ++ iDihedral)
         {
@@ -932,8 +932,8 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_vsites[mol]);
 
-        p_topol->vsite_4[mol] = my_malloc(p_topol->n_vsites[mol] * sizeof(VSite_4));
-        p_topol->vsite_funct[mol] = my_malloc(p_topol->n_vsites[mol] * sizeof(int));
+        p_topol->vsite_4[mol] = (VSite_4 *)my_malloc(p_topol->n_vsites[mol] * sizeof(VSite_4));
+        p_topol->vsite_funct[mol] = (int *)my_malloc(p_topol->n_vsites[mol] * sizeof(int));
 
         for (iVSite = 0; iVSite < p_topol->n_vsites[mol]; ++ iVSite)
         {
@@ -972,7 +972,7 @@ void read_param_2(char *input_param, Topol *p_topol, Metal *p_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &p_topol->n_constraints[mol]);
 
-        p_topol->constraint[mol] = my_malloc(p_topol->n_constraints[mol] * sizeof(Constraint));
+        p_topol->constraint[mol] = (Constraint *)my_malloc(p_topol->n_constraints[mol] * sizeof(Constraint));
 
         for (iCstr = 0; iCstr < p_topol->n_constraints[mol]; ++ iCstr)
         {

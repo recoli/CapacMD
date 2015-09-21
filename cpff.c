@@ -208,9 +208,9 @@ void update_count_nnz(long int *p_count_nnz, long int *p_count_size, long int in
     {
         *p_count_size += incr_size;
 
-        p_metal->val     = realloc(p_metal->val    , sizeof(double)   * (*p_count_size));
-        p_metal->col_ind = realloc(p_metal->col_ind, sizeof(long int) * (*p_count_size));
-        p_metal->row_ind = realloc(p_metal->row_ind, sizeof(long int) * (*p_count_size));
+        p_metal->val     = (double *)realloc(p_metal->val    , sizeof(double)   * (*p_count_size));
+        p_metal->col_ind = (long int *)realloc(p_metal->col_ind, sizeof(long int) * (*p_count_size));
+        p_metal->row_ind = (long int *)realloc(p_metal->row_ind, sizeof(long int) * (*p_count_size));
 
         if (NULL == p_metal->val ||
             NULL == p_metal->col_ind ||

@@ -1,5 +1,5 @@
-CC=mpicc
-CFLAGS=-O3 -Wall -lm
+CC=mpicxx
+CFLAGS=-O2 -std=c++0x -Wall -lm 
 OBJ=file.o force.o thermostat.o \
 	 mpi-main.o my_malloc.o cpff.o bicg_stab.o
 
@@ -7,7 +7,7 @@ OBJ=file.o force.o thermostat.o \
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 mpi-main: $(OBJ)
-	mpicc -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:  
 	rm -f mpi-main *.o
