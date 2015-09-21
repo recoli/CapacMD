@@ -198,48 +198,15 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 }
 
 
-// update count_nnz; also update count_size and reallocate memory when necessary
-// will be used in the construction of CPIM matrix
-void update_count_nnz(long int *p_count_nnz, long int *p_count_size, long int incr_size, Metal *p_metal)
-{
-    ++ (*p_count_nnz);
-
-    if (*p_count_nnz >= *p_count_size)
-    {
-        *p_count_size += incr_size;
-
-        p_metal->val     = (double *)realloc(p_metal->val    , sizeof(double)   * (*p_count_size));
-        p_metal->col_ind = (long int *)realloc(p_metal->col_ind, sizeof(long int) * (*p_count_size));
-        p_metal->row_ind = (long int *)realloc(p_metal->row_ind, sizeof(long int) * (*p_count_size));
-
-        if (NULL == p_metal->val ||
-            NULL == p_metal->col_ind ||
-            NULL == p_metal->row_ind)
-        {
-            printf("Error in update_count_nnz; cannot realloc memory!\n");
-            printf("      count_nnz= %ld\n", *p_count_nnz);
-            printf("      count_size= %ld\n", *p_count_size);
-            printf("      memory needed= %zu + %zu + %zu MB\n", 
-                    sizeof(double)   * (*p_count_size) / 1000000,
-                    sizeof(long int) * (*p_count_size) / 1000000,
-                    sizeof(long int) * (*p_count_size) / 1000000);
-            exit(1);
-        }
-    }
-}
-
-
 //==================================================
 // construct sparse CPIM matrix
 //==================================================
 
 void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                            int my_id, int num_procs, 
-                            long int *p_count_size, long int incr_size, long int *p_count_nnz)
+                            int my_id, int num_procs, long int *p_count_nnz)
 {
     // initialize nnz and size counter
     long int count_nnz  = 0;
-    long int count_size = 0;
 
     int start_metal = p_task->start_metal[my_id];
     int end_metal   = p_task->end_metal[my_id];
@@ -341,12 +308,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                             if (fabs(element) > THRSHD_P)
                             {
-                                p_metal->val[count_nnz] = element;
-                                p_metal->col_ind[count_nnz] = icol;
-                                p_metal->row_ind[count_nnz] = irow;
-
-                                //++ count_nnz;
-                                update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                                if (count_nnz >= p_metal->vec_val.size()) {
+                                    p_metal->vec_val.push_back(element);
+                                    p_metal->vec_row_ind.push_back(irow);
+                                    p_metal->vec_col_ind.push_back(icol);
+                                } else {
+                                    p_metal->vec_val[count_nnz] = element;
+                                    p_metal->vec_row_ind[count_nnz] = irow;
+                                    p_metal->vec_col_ind[count_nnz] = icol;
+                                }
+                                ++ count_nnz;
                             }
                         }
                     }
@@ -358,12 +329,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                         if (fabs(element) > THRSHD_P)
                         {
-                            p_metal->val[count_nnz] = element;
-                            p_metal->col_ind[count_nnz] = icol;
-                            p_metal->row_ind[count_nnz] = irow;
-                        
-                            //++ count_nnz;
-                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                            if (count_nnz >= p_metal->vec_val.size()) {
+                                p_metal->vec_val.push_back(element);
+                                p_metal->vec_row_ind.push_back(irow);
+                                p_metal->vec_col_ind.push_back(icol);
+                            } else {
+                                p_metal->vec_val[count_nnz] = element;
+                                p_metal->vec_row_ind[count_nnz] = irow;
+                                p_metal->vec_col_ind[count_nnz] = icol;
+                            }
+                            ++ count_nnz;
                         }
                     }
 
@@ -379,12 +354,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                         if (fabs(element) > THRSHD_M)
                         {
-                            p_metal->val[count_nnz] = element;
-                            p_metal->col_ind[count_nnz] = icol;
-                            p_metal->row_ind[count_nnz] = irow;
-                        
-                            //++ count_nnz;
-                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                            if (count_nnz >= p_metal->vec_val.size()) {
+                                p_metal->vec_val.push_back(element);
+                                p_metal->vec_row_ind.push_back(irow);
+                                p_metal->vec_col_ind.push_back(icol);
+                            } else {
+                                p_metal->vec_val[count_nnz] = element;
+                                p_metal->vec_row_ind[count_nnz] = irow;
+                                p_metal->vec_col_ind[count_nnz] = icol;
+                            }
+                            ++ count_nnz;
                         }
                     }
                 }
@@ -408,12 +387,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                         if (fabs(element) > THRSHD_M)
                         {
-                            p_metal->val[count_nnz] = element;
-                            p_metal->col_ind[count_nnz] = icol;
-                            p_metal->row_ind[count_nnz] = irow;
-                        
-                            //++ count_nnz;
-                            update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                            if (count_nnz >= p_metal->vec_val.size()) {
+                                p_metal->vec_val.push_back(element);
+                                p_metal->vec_row_ind.push_back(irow);
+                                p_metal->vec_col_ind.push_back(icol);
+                            } else {
+                                p_metal->vec_val[count_nnz] = element;
+                                p_metal->vec_row_ind[count_nnz] = irow;
+                                p_metal->vec_col_ind[count_nnz] = icol;
+                            }
+                            ++ count_nnz;
                         }
                     }
                 }
@@ -428,12 +411,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                     if (fabs(element) > THRSHD_Q)
                     {
-                        p_metal->val[count_nnz] = element;
-                        p_metal->col_ind[count_nnz] = icol;
-                        p_metal->row_ind[count_nnz] = irow;
-                    
-                        //++ count_nnz;
-                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                        if (count_nnz >= p_metal->vec_val.size()) {
+                            p_metal->vec_val.push_back(element);
+                            p_metal->vec_row_ind.push_back(irow);
+                            p_metal->vec_col_ind.push_back(icol);
+                        } else {
+                            p_metal->vec_val[count_nnz] = element;
+                            p_metal->vec_row_ind[count_nnz] = irow;
+                            p_metal->vec_col_ind[count_nnz] = icol;
+                        }
+                        ++ count_nnz;
                     }
                 }
                 else
@@ -442,12 +429,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                     if (fabs(element) > THRSHD_Q)
                     {
-                        p_metal->val[count_nnz] = element;
-                        p_metal->col_ind[count_nnz] = icol;
-                        p_metal->row_ind[count_nnz] = irow;
-                    
-                        //++ count_nnz;
-                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                        if (count_nnz >= p_metal->vec_val.size()) {
+                            p_metal->vec_val.push_back(element);
+                            p_metal->vec_row_ind.push_back(irow);
+                            p_metal->vec_col_ind.push_back(icol);
+                        } else {
+                            p_metal->vec_val[count_nnz] = element;
+                            p_metal->vec_row_ind[count_nnz] = irow;
+                            p_metal->vec_col_ind[count_nnz] = icol;
+                        }
+                        ++ count_nnz;
                     }
                 }
 
@@ -465,12 +456,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                             if (fabs(element) > THRSHD_Q)
                             {
-                                p_metal->val[count_nnz] = element;
-                                p_metal->col_ind[count_nnz] = icol;
-                                p_metal->row_ind[count_nnz] = irow;
-                            
-                                //++ count_nnz;
-                                update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                                if (count_nnz >= p_metal->vec_val.size()) {
+                                    p_metal->vec_val.push_back(element);
+                                    p_metal->vec_row_ind.push_back(irow);
+                                    p_metal->vec_col_ind.push_back(icol);
+                                } else {
+                                    p_metal->vec_val[count_nnz] = element;
+                                    p_metal->vec_row_ind[count_nnz] = irow;
+                                    p_metal->vec_col_ind[count_nnz] = icol;
+                                }
+                                ++ count_nnz;
                             }
                         }
                     }
@@ -501,12 +496,16 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
 
                     if (fabs(element) > THRSHD_Q)
                     {
-                        p_metal->val[count_nnz] = element;
-                        p_metal->col_ind[count_nnz] = icol;
-                        p_metal->row_ind[count_nnz] = irow;
-                    
-                        //++ count_nnz;
-                        update_count_nnz(&count_nnz, &count_size, incr_size, p_metal);
+                        if (count_nnz >= p_metal->vec_val.size()) {
+                            p_metal->vec_val.push_back(element);
+                            p_metal->vec_row_ind.push_back(irow);
+                            p_metal->vec_col_ind.push_back(icol);
+                        } else {
+                            p_metal->vec_val[count_nnz] = element;
+                            p_metal->vec_row_ind[count_nnz] = irow;
+                            p_metal->vec_col_ind[count_nnz] = icol;
+                        }
+                        ++ count_nnz;
                     }
                 }
             }
@@ -514,7 +513,6 @@ void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, doub
     }
 
     *p_count_nnz  = count_nnz;
-    *p_count_size = count_size;
 
     // no need to gather mat_relay on root processor
     // mat_relay will stay distributed on each proc for subsequent mpi_bicg_stab

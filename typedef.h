@@ -22,6 +22,8 @@
     with this program; if not, see http://www.gnu.org/licenses/.
 */
 
+#include <vector>
+
 //================= Physical and mathematical constants =====================
 
 /// maximal length of string
@@ -280,8 +282,8 @@ typedef struct {
     /// \name CPIM matrix in COO format
     ///@{
     double *diag_relay;
-    double *val;
-    long int *col_ind, *row_ind;
+    std::vector <double> vec_val;
+    std::vector <long int> vec_row_ind, vec_col_ind;
     ///@}
 } Metal;
 

@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vector>
+
 #include "typedef.h"
 #include "my_malloc.h"
 #include "file.h"
@@ -36,13 +38,12 @@
 
 //========================================================
 // Parallel matrix-vector multiplication
-// for sparse matrix
+// for sparse matrix in COO format
 // Each processor has partial matrix A and full vector x
 // Partial vector Ax is stored locally (no communication)
 //========================================================
 
-void mpi_mat_vec_COO(const int count_nnz, const int n_mat, double *val, long int *col_ind, 
-                     long int *row_ind, double* x, double* Ax)
+void mpi_mat_vec_COO(const int count_nnz, const int n_mat, Metal *p_metal, double* x, double* Ax)
 {
     // zero the Ax vector
     long int idx;
@@ -54,10 +55,10 @@ void mpi_mat_vec_COO(const int count_nnz, const int n_mat, double *val, long int
     // add contributions to the Ax vector
     for (idx = 0; idx < count_nnz; ++ idx)
     {
-        long int irow = row_ind[idx];
-        long int icol = col_ind[idx];
+        long int irow = p_metal->vec_row_ind[idx];
+        long int icol = p_metal->vec_col_ind[idx];
 
-        Ax[irow] += val[idx] * x[icol];
+        Ax[irow] += p_metal->vec_val[idx] * x[icol];
     }
 }
 
@@ -118,7 +119,7 @@ void mpi_mat_vec(int start_metal, int end_metal,
 //=================================================
 
 void mpi_vec_vec(int start_metal, int end_metal, int min_metal, int max_metal, int n_NPs,
-                      double* a, double* b, double* ptr_aTb, int my_id, int num_procs)
+                 double* a, double* b, double* ptr_aTb, int my_id, int num_procs)
 {
     int n_metal = max_metal - min_metal + 1;
 
@@ -254,13 +255,6 @@ void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int
                               int my_id, int num_procs, Metal *p_metal, long int count_nnz,
                               Bicgstab *p_bicgstab)
 {
-    double *val;
-    long int *col_ind, *row_ind;
-
-    val = p_metal->val;
-    col_ind = p_metal->col_ind;
-    row_ind = p_metal->row_ind;
-
     int n_metal = max_metal - min_metal + 1;
     const int root_process = 0;
 
@@ -301,7 +295,7 @@ void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int
     double criteria = bTb * 1.0e-08;
 
     // Ax = A * x = relay * vec_pq
-    mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, vec_pq, Ax);
+    mpi_mat_vec_COO(count_nnz, n_mat, p_metal, vec_pq, Ax);
 
 
     // set initial values
@@ -405,7 +399,7 @@ void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      y, my_id, num_procs);
 
-        mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, y, v);
+        mpi_mat_vec_COO(count_nnz, n_mat, p_metal, y, v);
 
         // alpha = rho / (r0, v)
         double r0_v;
@@ -450,7 +444,7 @@ void mpi_precon_bicg_stab_COO(int start_metal, int end_metal, int min_metal, int
         mpi_comm_vec(start_metal, end_metal, min_metal, max_metal, n_NPs,
                      z, my_id, num_procs);
 
-        mpi_mat_vec_COO(count_nnz, n_mat, val, col_ind, row_ind, z, t);
+        mpi_mat_vec_COO(count_nnz, n_mat, p_metal, z, t);
 
         // compute Kt = K * t
         for(i_metal = start_metal; i_metal <= end_metal; i_metal ++)

@@ -2115,9 +2115,6 @@ void mpi_force(Task *p_task, Topol *p_topol,
     int tag_12 = 12; // slave to master, p_system->partial_vir
     int tag_13 = 13; // slave to master, p_system->partial_pot
 
-    //int i_mat, j_mat;
-    //int n_mat = p_metal->num * 4 + p_metal->n_NPs;
-
     int i, j;
 
 
@@ -2206,29 +2203,15 @@ void mpi_force(Task *p_task, Topol *p_topol,
             
             // define an incremental number of elements for realloc
             long int n_mat = p_metal->num * 4 + p_metal->n_NPs;
-            long int incr_size = n_mat * (p_metal->num * 4) / num_procs / 16;
-            if (my_id == root_process) { incr_size += n_mat * p_metal->n_NPs / 4; }
 
-            // initialize count_size and count_nnz
-            long int count_size = incr_size;
+            // initialize count_nnz
             long int count_nnz = 0;
-
-            // allocate memory for the CPIM matrix
-            p_metal->val     = (double *)my_malloc(sizeof(double)   * count_size);
-            p_metal->col_ind = (long int *)my_malloc(sizeof(long int) * count_size);
-            p_metal->row_ind = (long int *)my_malloc(sizeof(long int) * count_size);
 
             // construct p_metal->mat_relay
             // also realloc memory for the CPIM matrix when necessary
             mpi_cpff_mat_relay_COO(p_task, p_metal, p_system, p_runset->rCut2, my_id, num_procs, 
-                                   &count_size, incr_size, &count_nnz);
+                                   &count_nnz);
 
-#ifdef DEBUG
-            printf("count_nnz= %ld, count_size= %ld, memory_size= %zu MB, overhead= %.1f%%\n", 
-                    count_nnz, count_size,
-                    (sizeof(double) + sizeof(long int) * 2) * count_size / 1000000,
-                    (double)(count_size - count_nnz) / count_size * 100);
-#endif
 
             gettimeofday(&tv, NULL);
             t1 = tv.tv_sec + tv.tv_usec * 1.0e-6;
@@ -2244,15 +2227,6 @@ void mpi_force(Task *p_task, Topol *p_topol,
                                          my_id, num_procs, p_metal, count_nnz, p_bicgstab);
             }
             // at the end of mpi_bicg_stab each proc has a copy of p_metal->vec_pq
-
-
-            free(p_metal->val);
-            free(p_metal->col_ind);
-            free(p_metal->row_ind);
-
-            p_metal->val = NULL;
-            p_metal->col_ind = NULL;
-            p_metal->row_ind = NULL;
 
 
             gettimeofday(&tv, NULL);

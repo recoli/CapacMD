@@ -36,8 +36,7 @@ void mpi_cpff_vec_ext(Task *p_task, Metal* p_metal, RunSet* p_runset,
 //==================================================
 
 void mpi_cpff_mat_relay_COO(Task *p_task, Metal *p_metal, System *p_system, double rCut2,
-                            int my_id, int num_procs, 
-                            long int *p_count_size, long int incr_size, long int *p_count_nnz);
+                            int my_id, int num_procs, long int *p_count_nnz);
 
 //=======================
 // calculate CPIM forces
