@@ -25,9 +25,18 @@
 
 #include <array>
 #include <vector>
-#include <boost/scoped_ptr.hpp>
+#include <string>
 
 //================= Physical and mathematical constants =====================
+
+/// root processor for MPI
+#define ROOT_PROC 0
+
+/// number of timers
+#define N_TIMER 15
+
+/// number of potential energy terms
+#define N_POT 15
 
 /// maximal length of string
 #define MAX_STR_LEN 256
@@ -209,7 +218,9 @@ typedef struct {
     /// \name General settings
     ///@{
     char run_type[MAX_STR_LEN], ensemble[MAX_STR_LEN];
-    char vdw_type[MAX_STR_LEN], coulomb_type[MAX_STR_LEN];
+    //char vdw_type[MAX_STR_LEN], coulomb_type[MAX_STR_LEN];
+    std::string vdw_type = "shifted";
+    std::string coulomb_type = "wolf_sum";
     int  use_vdw, use_coulomb;
     ///@}
 

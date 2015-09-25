@@ -75,11 +75,9 @@ void mpi_mat_vec(int start_metal, int end_metal,
     int n_metal = max_metal - min_metal + 1;
     int n_mat = n_metal*4 + n_NPs;
 
-    int root_process = 0;
-
     int i_metal, i, j;
 
-    for(i_metal = start_metal; i_metal <= end_metal; i_metal ++)
+    for (i_metal = start_metal; i_metal <= end_metal; i_metal ++)
     {
         i = i_metal - min_metal;
 
@@ -89,7 +87,7 @@ void mpi_mat_vec(int start_metal, int end_metal,
         Ax[i*3 + 2] = 0.0;
         Ax[n_metal*3 + i] = 0.0;
 
-        for(j = 0; j < n_mat; j ++)
+        for (j = 0; j < n_mat; j ++)
         {
             Ax[i*3] += A[i*3][j] * x[j];
             Ax[i*3+1] += A[i*3+1][j] * x[j];
@@ -98,14 +96,14 @@ void mpi_mat_vec(int start_metal, int end_metal,
         }
     }
 
-    if(my_id == root_process)
+    if (ROOT_PROC == my_id)
     {
         // calculate the last element on root processor
         int iNP;
-        for(iNP = 0; iNP < n_NPs; iNP ++)
+        for (iNP = 0; iNP < n_NPs; iNP ++)
         {
             Ax[n_metal*4 + iNP] = 0.0;
-            for(j = 0; j < n_mat; j ++) {
+            for (j = 0; j < n_mat; j ++) {
                 Ax[n_metal*4 + iNP] += A[n_metal*4 + iNP][j] * x[j];
             }
         }
@@ -122,7 +120,6 @@ void mpi_vec_vec(int start_metal, int end_metal, int min_metal, int max_metal, i
 {
     int n_metal = max_metal - min_metal + 1;
 
-    int root_process = 0;
     MPI::Status status;
 
     int tag_51 = 51; // slave to master, partial_aTb
@@ -141,7 +138,7 @@ void mpi_vec_vec(int start_metal, int end_metal, int min_metal, int max_metal, i
     }
 
     double partial_aTb;
-    if (my_id == root_process)
+    if (ROOT_PROC == my_id)
     {
         // get partial sum from slave processors
         for (int an_id = 1; an_id < num_procs; ++ an_id)
@@ -166,10 +163,10 @@ void mpi_vec_vec(int start_metal, int end_metal, int min_metal, int max_metal, i
     else
     {
         // send partial sum to root processor
-        MPI::COMM_WORLD.Send(ptr_aTb, 1, MPI::DOUBLE, root_process, tag_51);
+        MPI::COMM_WORLD.Send(ptr_aTb, 1, MPI::DOUBLE, ROOT_PROC, tag_51);
 
         // get the sum from root processor
-        MPI::COMM_WORLD.Recv(ptr_aTb, 1, MPI::DOUBLE, root_process,
+        MPI::COMM_WORLD.Recv(ptr_aTb, 1, MPI::DOUBLE, ROOT_PROC,
                              tag_52, status);
     }
 }
@@ -185,7 +182,6 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 {
     // communicate inv_sqrt_dens among all processors
     MPI::Status status;
-    const int root_process = 0;
 
     int tag_91 = 91; // any to any, start
     int tag_92 = 92; // any to any, num
@@ -200,7 +196,7 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
     int s1, s2, n1, n2;
 
     // master: receive data
-    if (root_process == my_id)
+    if (ROOT_PROC == my_id)
     {
         for (int an_id = 1; an_id < num_procs; ++ an_id)
         {
@@ -226,15 +222,15 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
         n1 = num*3;
         n2 = num;
 
-        MPI::COMM_WORLD.Send(&start, 1, MPI::INT, root_process, tag_91);
-        MPI::COMM_WORLD.Send(&num,   1, MPI::INT, root_process, tag_92);
+        MPI::COMM_WORLD.Send(&start, 1, MPI::INT, ROOT_PROC, tag_91);
+        MPI::COMM_WORLD.Send(&num,   1, MPI::INT, ROOT_PROC, tag_92);
 
-        MPI::COMM_WORLD.Send(&(Ax[s1]), n1, MPI::DOUBLE, root_process, tag_93);
-        MPI::COMM_WORLD.Send(&(Ax[s2]), n2, MPI::DOUBLE, root_process, tag_94);
+        MPI::COMM_WORLD.Send(&(Ax[s1]), n1, MPI::DOUBLE, ROOT_PROC, tag_93);
+        MPI::COMM_WORLD.Send(&(Ax[s2]), n2, MPI::DOUBLE, ROOT_PROC, tag_94);
     }
 
     // broadcast the last element
-    MPI::COMM_WORLD.Bcast(&(Ax[0]), n_metal * 4 + n_NPs, MPI::DOUBLE, root_process);
+    MPI::COMM_WORLD.Bcast(&(Ax[0]), n_metal * 4 + n_NPs, MPI::DOUBLE, ROOT_PROC);
 }
 
 
@@ -259,7 +255,6 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
     double *vec_pq     = s_metal.vec_pq;
 
     int n_metal = max_metal - min_metal + 1;
-    const int root_process = 0;
     
     // A == relay
     // b == vec_ext
@@ -335,7 +330,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
         K[a3] = 1.0 / diag_relay[a3];
         K[a4] = 1.0 / diag_relay[a4];
     }
-    if (my_id == root_process)
+    if (ROOT_PROC == my_id)
     {
         for (int iNP = 0; iNP < n_NPs; ++ iNP)
         {
@@ -383,7 +378,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             y[a3] = p[a3] * K[a3];
             y[a4] = p[a4] * K[a4];
         }
-        if (my_id == root_process)
+        if (ROOT_PROC == my_id)
         {
             for (int iNP = 0; iNP < n_NPs; ++ iNP)
             {
@@ -427,7 +422,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             z[a3] = s[a3] * K[a3];
             z[a4] = s[a4] * K[a4];
         }
-        if (my_id == root_process)
+        if (ROOT_PROC == my_id)
         {
             for (int iNP = 0; iNP < n_NPs; ++ iNP)
             {
@@ -459,7 +454,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             Kt[a3] = t[a3] * K[a3];
             Kt[a4] = t[a4] * K[a4];
         }
-        if (my_id == root_process)
+        if (ROOT_PROC == my_id)
         {
             for (int iNP = 0; iNP < n_NPs; ++ iNP)
             {
@@ -497,7 +492,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             r[a3] = s[a3] - omega * t[a3];
             r[a4] = s[a4] - omega * t[a4];
         }
-        if (my_id == root_process)
+        if (ROOT_PROC == my_id)
         {
             for (int iNP = 0; iNP < n_NPs; ++ iNP)
             {
@@ -518,7 +513,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
                     r, r, &rTr, my_id, num_procs);
 
 #ifdef DEBUG
-        if (my_id == root_process)
+        if (ROOT_PROC == my_id)
         {
             printf("iter= %d, rTr=%e, bTb= %e\n", iter, rTr, bTb);
         }
@@ -536,7 +531,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             // Loosen the convergence criteria a bit
             if (rTr < criteria * 100.0)
             {
-                if (my_id == root_process)
+                if (ROOT_PROC == my_id)
                 {
                     printf("Note: Loosen bicg_stab convergence criteria to 1e-6 for this step.\n");
                 }
@@ -549,7 +544,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
             else
             {
                 // not converged, terminate the program
-                if (my_id == root_process)
+                if (ROOT_PROC == my_id)
                 {
                     printf("Error: bicg_stab not converged. rTr= %e, bTb= %e\n", rTr, bTb);
                 }

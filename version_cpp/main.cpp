@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <cassert>
 
 #include <string>
 
@@ -45,7 +46,6 @@ int main(int argc, char *argv[])
     //============= set up MPI =================
     
     MPI::Status status;
-    const int root_process = 0;
 
     // initialize MPI, get my_id for this process and total number of processes
     MPI::Init(argc, argv);
@@ -58,7 +58,6 @@ int main(int argc, char *argv[])
 
     //============ get input files =============
 
-    /// \todo will use string to store input filename: gro, param, mdset
     // default filenames
     std::string input_gro = "init.gro";
     std::string input_param = "param.txt";
@@ -122,13 +121,14 @@ int main(int argc, char *argv[])
     // time_used[8] = CPIM force
     // time_used[10] = QSC density communication
     
-    double **time_used = (double **)my_malloc(sizeof(double *) * num_procs);
-    for(int an_id = 0; an_id < num_procs; ++ an_id)
+    double **time_used = new (std::nothrow) double* [num_procs];
+    assert(time_used != nullptr);
+    for (int an_id = 0; an_id < num_procs; ++ an_id)
     {
-        time_used[an_id] = (double *)my_malloc(sizeof(double) * 15);
+        time_used[an_id] = new (std::nothrow) double [N_TIMER];
+        assert(time_used[an_id] != nullptr);
 
-        int it;
-        for(it = 0; it < 15; ++ it)
+        for (int it = 0; it < N_TIMER; ++ it)
         {
             time_used[an_id][it] = 0.0;
         }
@@ -136,17 +136,17 @@ int main(int argc, char *argv[])
 
 
     // Coulomb type: cut_off, wolf_sum
-    if (0 == strcmp(s_runset.coulomb_type, "cut_off" )) 
+    if (std::string("cut_off") == s_runset.coulomb_type)
     { 
         s_runset.use_coulomb = 0; 
     }
-    else if (0 == strcmp(s_runset.coulomb_type, "wolf_sum")) 
+    else if (std::string("wolf_sum") == s_runset.coulomb_type)
     { 
         s_runset.use_coulomb = 1; 
     }
     else 
     { 
-        printf("Error: unknown coulomb_type %s!\n", s_runset.coulomb_type); 
+        printf("Error: unknown coulomb_type %s!\n", s_runset.coulomb_type.c_str());
         exit(1); 
     }
 
@@ -174,19 +174,18 @@ int main(int argc, char *argv[])
     s_runset.w_erfc_arCut = erfc(w_alpha * rCut)/ rCut;
 
 
-
     // van der Waals type: cut_off or shifted
-    if (0 == strcmp(s_runset.vdw_type, "cut_off"))
+    if (std::string("cut_off") == s_runset.vdw_type)
     {
         s_runset.use_vdw = 0; 
     }
-    else if (0 == strcmp(s_runset.vdw_type, "shifted"))
+    else if (std::string("shifted") == s_runset.vdw_type)
     { 
         s_runset.use_vdw = 1; 
     }
     else 
     { 
-        printf("Error: unknown vdw_type %s!\n", s_runset.vdw_type); 
+        printf("Error: unknown vdw_type %s!\n", s_runset.vdw_type.c_str());
         exit(1); 
     }
 
@@ -203,11 +202,10 @@ int main(int argc, char *argv[])
     
     Topol s_topol;
 
-    int mol, atom;
-    int number_VSites, number_Cstrs;
 
-    // variables for bonded and nonbonded interaction
-
+    // read parameters from input_param, step 1
+    read_param_1(input_param, s_topol, s_metal);
+    
 
     // CPIM: capacitance-polarizability interaction model
     // Ref.: a) Jensen and Jensen, J. Phys. Chem. C, 2008, 112, 15697-15703
@@ -222,77 +220,78 @@ int main(int argc, char *argv[])
     // s_metal.start_NP:   first atom of a nanoparticle
     // s_metal.end_NP:     last atom of a nanoparticle
     
-
-    // read parameters from input_param, step 1
-    read_param_1(input_param, s_topol, s_metal);
-
-
-    // allocate memory for arrays
-
     // CPIM charge and indices
-    s_metal.cpff_chg = (double *)my_malloc(s_metal.n_NPs * sizeof(double));
-    s_metal.start_NP = (int *)my_malloc(s_metal.n_NPs * sizeof(int));
-    s_metal.end_NP   = (int *)my_malloc(s_metal.n_NPs * sizeof(int));
-
+    s_metal.cpff_chg = new (std::nothrow) double [s_metal.n_NPs];
+    s_metal.start_NP = new (std::nothrow) int [s_metal.n_NPs];
+    s_metal.end_NP   = new (std::nothrow) int [s_metal.n_NPs];
+    assert(s_metal.cpff_chg != nullptr);
+    assert(s_metal.start_NP != nullptr);
+    assert(s_metal.end_NP   != nullptr);
 
     // molecules and atom parameters
     // For a given molecule type (mol from 0 to s_topol.mol_types-1):
     // s_topol.atom_num[mol]:  its number of atoms
     // s_topol.mol_num[mol]:   the number of this type of molecule in the system
-    s_topol.atom_num   = (int *)my_malloc(s_topol.mol_types * sizeof(int));
-    s_topol.mol_num    = (int *)my_malloc(s_topol.mol_types * sizeof(int));
-    s_topol.atom_param = (AtomParam **)my_malloc(s_topol.mol_types * sizeof(AtomParam *));
+    s_topol.atom_num   = new (std::nothrow) int [s_topol.mol_types];
+    s_topol.mol_num    = new (std::nothrow) int [s_topol.mol_types];
+    s_topol.atom_param = new (std::nothrow) AtomParam* [s_topol.mol_types];
+    assert(s_topol.atom_num   != nullptr);
+    assert(s_topol.mol_num    != nullptr);
+    assert(s_topol.atom_param != nullptr);
 
+    
+    // variables for bonded and nonbonded interaction
 
     // van der Waals interaction parameters
-    NonbondedParam *data_nonbonded = 
-        (NonbondedParam *)my_malloc(s_topol.n_types * s_topol.n_types *
-                                    sizeof(NonbondedParam));
+    NonbondedParam *data_nonbonded = new (std::nothrow) NonbondedParam
+                                     [s_topol.n_types * s_topol.n_types];
+    assert(data_nonbonded != nullptr);
 
-    s_topol.nonbonded_param =
-        (NonbondedParam **)my_malloc(s_topol.n_types * sizeof(NonbondedParam *));
+    s_topol.nonbonded_param = new (std::nothrow) NonbondedParam* [s_topol.n_types];
+    assert(s_topol.nonbonded_param != nullptr);
 
-    int i_type;
-    for(i_type = 0; i_type < s_topol.n_types; ++ i_type)
+    for (int i_type = 0; i_type < s_topol.n_types; ++ i_type)
     {
         s_topol.nonbonded_param[i_type] =
             &(data_nonbonded[s_topol.n_types * i_type]);
     }
 
-
     // bonded potentials: bond, pair, angle, dihedral
-    int *data_bonded = (int *)my_malloc(sizeof(int) * s_topol.mol_types * 6);
+    int *data_bonded = new (std::nothrow) int [s_topol.mol_types * 6];
     s_topol.n_bonds       = &(data_bonded[0]);
     s_topol.n_pairs       = &(data_bonded[s_topol.mol_types]);
     s_topol.n_angles      = &(data_bonded[s_topol.mol_types * 2]);
     s_topol.n_dihedrals   = &(data_bonded[s_topol.mol_types * 3]);
     s_topol.n_vsites      = &(data_bonded[s_topol.mol_types * 4]);
     s_topol.n_constraints = &(data_bonded[s_topol.mol_types * 5]);
+    
+    s_topol.bond_param     = new (std::nothrow) BondParam*     [s_topol.mol_types];
+    s_topol.pair_param     = new (std::nothrow) PairParam*     [s_topol.mol_types];
+    s_topol.angle_param    = new (std::nothrow) AngleParam*    [s_topol.mol_types];
+    s_topol.dihedral_param = new (std::nothrow) DihedralParam* [s_topol.mol_types];
+    assert(s_topol.bond_param     != nullptr);
+    assert(s_topol.pair_param     != nullptr);
+    assert(s_topol.angle_param    != nullptr);
+    assert(s_topol.dihedral_param != nullptr);
 
-    s_topol.vsite_funct    = (int **)my_malloc(s_topol.mol_types * sizeof(int *)) ;
+    // virtual sites, constraints and exclusions
+    s_topol.vsite_funct    = new (std::nothrow) int*        [s_topol.mol_types];
+    s_topol.vsite_4        = new (std::nothrow) VSite_4*    [s_topol.mol_types];
+    s_topol.constraint     = new (std::nothrow) Constraint* [s_topol.mol_types];
+    assert(s_topol.vsite_funct    != nullptr);
+    assert(s_topol.vsite_4        != nullptr);
+    assert(s_topol.constraint     != nullptr);
 
-    s_topol.bond_param     = (BondParam **)my_malloc(s_topol.mol_types *
-                                                      sizeof(BondParam *));
-    s_topol.pair_param     = (PairParam **)my_malloc(s_topol.mol_types *
-                                                      sizeof(PairParam *)) ;
-    s_topol.angle_param    = (AngleParam **)my_malloc(s_topol.mol_types *
-                                                       sizeof(AngleParam *));
-    s_topol.dihedral_param = (DihedralParam **)my_malloc(s_topol.mol_types *
-                                                          sizeof(DihedralParam *)) ;
-    s_topol.vsite_4        = (VSite_4 **)my_malloc(s_topol.mol_types *
-                                                    sizeof(VSite_4 *)) ;
-    s_topol.constraint     = (Constraint **)my_malloc(s_topol.mol_types *
-                                                       sizeof(Constraint *)) ;
+    s_topol.exclude = new (std::nothrow) int** [s_topol.mol_types];
+    assert(s_topol.exclude != nullptr);
 
-    s_topol.exclude = (int ***)my_malloc(s_topol.mol_types * sizeof(int **)) ;
-
-
+    /// \todo will improve the "have_metal" checking
     // Quantum Sutton-Chen densities for metal
-    if (s_metal.min >=0 && s_metal.max >= s_metal.min)
+    if (s_metal.min >= 0 && s_metal.max >= s_metal.min)
     {
-        s_metal.inv_sqrt_dens = (double *)my_malloc(sizeof(double) * s_metal.num);
+        s_metal.inv_sqrt_dens = new (std::nothrow) double [s_metal.num];
+        assert(s_metal.inv_sqrt_dens != nullptr);
     }
-
 
     // read parameters from input_param, step 2
     read_param_2(input_param, s_topol, s_metal);
@@ -300,21 +299,18 @@ int main(int argc, char *argv[])
     int nAtoms = s_topol.n_atoms;
     int nMols  = s_topol.n_mols;
 
-
     // count number of virtual sites and constraints
-    number_VSites = 0;
-    number_Cstrs  = 0;
-    for(mol = 0; mol < s_topol.mol_types; ++ mol)
+    int number_VSites = 0;
+    int number_Cstrs  = 0;
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
-        number_VSites += s_topol.n_vsites[mol] * s_topol.mol_num[mol];
+        number_VSites += s_topol.n_vsites[mol]      * s_topol.mol_num[mol];
         number_Cstrs  += s_topol.n_constraints[mol] * s_topol.mol_num[mol];
     }
-
 
     // Gaussian distribution width for capacitance-polarizability model
     // see Mayer, Phys. Rev. B 2007, 75, 045407
     // and Jensen, J. Phys. Chem. C 2008, 112, 15697
-
     s_metal.inv_polar = 1.0 / s_metal.cpff_polar;
     s_metal.inv_capac = 1.0 / s_metal.cpff_capac;
     
@@ -326,8 +322,9 @@ int main(int argc, char *argv[])
     s_metal.inv_R_pp = 1.0 / sqrt(R_p * R_p + R_p * R_p);
 
 
-    // print info
-    if (root_process == my_id) 
+    //=========== print program version, reference and running information ==============
+
+    if (ROOT_PROC == my_id)
     {
         printf("\n");
         printf("              +-----------------------------------------------------+\n");
@@ -352,7 +349,8 @@ int main(int argc, char *argv[])
         printf("              .------------------ run parameters -------------------.\n");
         printf("\n");
         printf("    run_type = %s, ensemble = %s\n", s_runset.run_type, s_runset.ensemble);
-        printf("    vdw_type = %s, coulomb_type = %s\n", s_runset.vdw_type, s_runset.coulomb_type);
+        printf("    vdw_type = %s, coulomb_type = %s\n",
+               s_runset.vdw_type.c_str(), s_runset.coulomb_type.c_str());
 
         printf("    rCut = %.3f nm, ", rCut);
         if (1 == s_runset.use_coulomb)
@@ -370,10 +368,10 @@ int main(int argc, char *argv[])
         printf("    There are %d types of molecules.\n", s_topol.mol_types);
         printf("\n");
 
-        for(mol = 0; mol < s_topol.mol_types; ++ mol)
+        for (int mol = 0; mol < s_topol.mol_types; ++ mol)
         {
             printf("    Molecule[%5d], num= %5d\n", mol, s_topol.mol_num[mol]);
-            for(atom = 0; atom < s_topol.atom_num[mol]; ++ atom)
+            for (int atom = 0; atom < s_topol.atom_num[mol]; ++ atom)
             {
                 printf("    Atom[%5d], charge= %8.3f, mass= %8.3f, atomtype= %5d\n",
                        atom, s_topol.atom_param[mol][atom].charge,
@@ -390,7 +388,8 @@ int main(int argc, char *argv[])
 
     Task s_task;
 
-    int *data_start_end = (int *)my_malloc(sizeof(int) * num_procs * 6);
+    int *data_start_end = new (std::nothrow) int [num_procs * 6];
+    assert(data_start_end != nullptr);
     s_task.start_mol   = &(data_start_end[0]);
     s_task.end_mol     = &(data_start_end[num_procs]);
     s_task.start_atom  = &(data_start_end[num_procs * 2]);
@@ -398,11 +397,13 @@ int main(int argc, char *argv[])
     s_task.start_metal = &(data_start_end[num_procs * 4]);
     s_task.end_metal   = &(data_start_end[num_procs * 5]);
 
-    find_start_end(s_task.start_mol,   s_task.end_mol,   nMols,        num_procs);
-    find_start_end(s_task.start_atom,  s_task.end_atom,  nAtoms,       num_procs);
+    find_start_end(s_task.start_mol,   s_task.end_mol,   nMols,       num_procs);
+    find_start_end(s_task.start_atom,  s_task.end_atom,  nAtoms,      num_procs);
     find_start_end(s_task.start_metal, s_task.end_metal, s_metal.num, num_procs);
 
-    long int *data_long_start_end = (long int *)my_malloc(sizeof(long int) * num_procs * 2);
+    /// \todo will implement overloading function for find_start_end
+    long int *data_long_start_end = new (std::nothrow) long int [num_procs * 2];
+    assert(data_long_start_end != nullptr);
     s_task.start_pair = &(data_long_start_end[0]);
     s_task.end_pair   = &(data_long_start_end[num_procs]);
 
@@ -421,8 +422,10 @@ int main(int argc, char *argv[])
     // mol_info[im].mini:  the index of its first atom in the system
     // mol_info[im].maxi:  the index of its last atom in the system
     
-    Atom_Info *atom_info = (Atom_Info *)my_malloc(nAtoms * sizeof(Atom_Info));
-    Mol_Info  *mol_info  = (Mol_Info  *)my_malloc(nMols  * sizeof(Mol_Info));
+    Atom_Info *atom_info = new (std::nothrow) Atom_Info [nAtoms];
+    Mol_Info  *mol_info  = new (std::nothrow) Mol_Info  [nMols];
+    assert(atom_info != nullptr);
+    assert(mol_info  != nullptr);
 
     assign_indices(s_topol, s_metal, atom_info, mol_info);
 
@@ -448,25 +451,26 @@ int main(int argc, char *argv[])
     // s_system.potential[13] = CPIM metal charge - metal dipole
     // s_system.potential[14] = CPIM metal dipole - metal dipole
     
-    double *data_potential = (double *)my_malloc(sizeof(double) * 15 * 2);
+    double *data_potential = new (std::nothrow) double [N_POT * 2];
+    assert(data_potential != nullptr);
     s_system.potential   = &(data_potential[0]);
-    s_system.partial_pot = &(data_potential[15]);
+    s_system.partial_pot = &(data_potential[N_POT]);
     s_system.old_potential = 0.0;
 
 
+    /// \todo will put virial and partial_vir on stack
     // virial tensor
     s_system.virial      = (double **)my_malloc(DIM * sizeof(double*));
     s_system.partial_vir = (double **)my_malloc(DIM * sizeof(double*));
 
     double *data_vir = (double *)my_malloc(DIM*2 * DIM * sizeof(double));
-    int i;
-    for (i = 0; i < DIM; ++ i)
+    for (int i = 0; i < DIM; ++ i)
     {
         s_system.virial[i]      = &(data_vir[DIM * i]);
         s_system.partial_vir[i] = &(data_vir[DIM * (DIM + i)]);
     }
 
-
+    /// \todo will put box size on stack
     // box size
     // Note: for now we treat rectangular box only.
     // "s_system.box" has six elements
@@ -476,7 +480,8 @@ int main(int argc, char *argv[])
 
 
     // coordinates, velocities and forces
-    double *data_rvf = (double *)my_malloc(nAtoms*7 * DIM * sizeof(double));
+    double *data_rvf = new (std::nothrow) double [nAtoms * DIM * 7];
+    assert(data_rvf != nullptr);
             
     s_system.rx = &(data_rvf[0]);
     s_system.ry = &(data_rvf[nAtoms]);
@@ -513,6 +518,7 @@ int main(int argc, char *argv[])
 
     //================ read input gro file ==================
     
+    /// \todo will introduce macro constant N_NHC 10
     // vQ and vP are "velocities" of the thermostat/barostat particles
     s_system.num_nhc = 10; // number of NH-chains hard-coded as 10
     s_system.vQ = (double *)my_malloc(sizeof(double) * s_system.num_nhc);
@@ -544,7 +550,6 @@ int main(int argc, char *argv[])
     s_system.inv_volume = 1.0 / s_system.volume;
 
 
-
     //================== set MD variables ==========================
 
     // degree of freedom
@@ -556,11 +561,9 @@ int main(int argc, char *argv[])
                       s_runset.tau_temp * s_runset.tau_temp;
     //s_system.pMass = (double)s_system.ndf * s_runset.kT * s_runset.tau_pres * s_runset.tau_pres;
 
-
     // temperature control
     s_system.first_temp = 0.0;
     s_system.ext_temp = 0.0;
-
 
     // time step
     s_runset.dt_2 = 0.5 * s_runset.dt;
@@ -577,16 +580,16 @@ int main(int argc, char *argv[])
     int n_mat = s_metal.num * 4 + s_metal.n_NPs;
 
     // initialize mat_relay, vec_ext and vec_pq
-    if (s_metal.min >=0 && s_metal.max >= s_metal.min)
+    if (s_metal.min >= 0 && s_metal.max >= s_metal.min)
     {
-        data_relay = (double *)my_malloc(sizeof(double) * n_mat * 3);
+        data_relay = new (std::nothrow) double [n_mat * 3];
+        assert(data_relay != nullptr);
 
-        s_metal.vec_pq  = &(data_relay[0]);
-        s_metal.vec_ext = &(data_relay[n_mat]);
+        s_metal.vec_pq     = &(data_relay[0]);
+        s_metal.vec_ext    = &(data_relay[n_mat]);
         s_metal.diag_relay = &(data_relay[n_mat * 2]);
 
-        int i_mat;
-        for(i_mat = 0; i_mat < n_mat; ++ i_mat)
+        for (int i_mat = 0; i_mat < n_mat; ++ i_mat)
         {
             s_metal.vec_pq[i_mat]  = 0.0;
             s_metal.vec_ext[i_mat] = 0.0;
@@ -597,8 +600,11 @@ int main(int argc, char *argv[])
 
     //=================== vectors for the BiCGSTAB solver =========================
 
-    double* data_bicgstab = (double *)my_malloc(sizeof(double) * n_mat * 11);
-    Bicgstab  *p_bicgstab = (Bicgstab *)my_malloc(sizeof(Bicgstab));
+    double* data_bicgstab = new (std::nothrow) double [n_mat * 11];
+    /// \todo will call bicgstab by reference in functions Bicgstab& s_bicgstab
+    Bicgstab  *p_bicgstab = new (std::nothrow) Bicgstab;
+    assert(data_bicgstab != nullptr);
+    assert(p_bicgstab != nullptr);
 
     p_bicgstab->Ax = &(data_bicgstab[0]);
     p_bicgstab->r0 = &(data_bicgstab[n_mat]);
@@ -630,7 +636,7 @@ int main(int argc, char *argv[])
 
     //========== adjust velocities and write trajectories =================
 
-    if (root_process == my_id) 
+    if (ROOT_PROC == my_id) 
     {
         // sum potential energies
         sum_potential(s_system.potential);
@@ -674,7 +680,7 @@ int main(int argc, char *argv[])
         write_gro(file_gro, s_system, nAtoms, atom_info, 0);
         write_binary(file_dat, s_system, nAtoms, 0);
 
-        if (s_metal.min >=0 && s_metal.max >= s_metal.min)
+        if (s_metal.min >= 0 && s_metal.max >= s_metal.min)
         {
             write_vec_pq(file_pq, s_metal, 0);
         }
@@ -718,7 +724,7 @@ int main(int argc, char *argv[])
         double delta_pot;
 
         // initialize direction sx,sy,sz
-        for(i = 0; i < nAtoms; ++ i)
+        for (int i = 0; i < nAtoms; ++ i)
         {
             s_system.old_fx[i] = s_system.fx[i];
             s_system.old_fy[i] = s_system.fy[i];
@@ -729,14 +735,14 @@ int main(int argc, char *argv[])
             s_system.sz[i] = s_system.fz[i];
         }
 
-        for(step = 1; step <= s_runset.em_steps && 0 == converged; ++ step) 
+        for (step = 1; step <= s_runset.em_steps && 0 == converged; ++ step) 
         {
             // update coordinates on root processor
-            if (root_process == my_id) 
+            if (ROOT_PROC == my_id) 
             {
                 s_system.old_potential = s_system.potential[0];
 
-                for(i = 0; i < nAtoms; ++ i)
+                for (int i = 0; i < nAtoms; ++ i)
                 {
                     s_system.old_rx[i] = s_system.rx[i];
                     s_system.old_ry[i] = s_system.ry[i];
@@ -749,18 +755,18 @@ int main(int argc, char *argv[])
                     }
 
                     s_system.rx[i] += s_system.sx[i] / s_system.f_max *
-                                       s_runset.em_length;
+                                      s_runset.em_length;
                     s_system.ry[i] += s_system.sy[i] / s_system.f_max *
-                                       s_runset.em_length;
+                                      s_runset.em_length;
                     s_system.rz[i] += s_system.sz[i] / s_system.f_max *
-                                       s_runset.em_length;
+                                      s_runset.em_length;
                 }
 
                 // apply constraints
                 rattle_1st(s_runset.dt, mol_info, atom_info, s_topol, s_system);
 
                 // zero velocities
-                for(i = 0; i < nAtoms; ++ i)
+                for (int i = 0; i < nAtoms; ++ i)
                 {
                     s_system.vx[i] = 0.0;
                     s_system.vy[i] = 0.0;
@@ -773,13 +779,14 @@ int main(int argc, char *argv[])
                       s_runset, s_metal, s_system, p_bicgstab,
                       my_id, num_procs, time_used);
 
-            if (root_process == my_id) 
+            if (ROOT_PROC == my_id) 
             {
                 // check potential and fmax on root processor
                 sum_potential(s_system.potential);
                 get_fmax_rms(nAtoms, s_system);
                 delta_pot = s_system.potential[0] - s_system.old_potential;
 
+                // update EM step size
                 if (delta_pot <= 0.0) 
                 { 
                     s_runset.em_length *= 1.2; 
@@ -827,7 +834,7 @@ int main(int argc, char *argv[])
                         double g22 = 0.0;
                         double g12 = 0.0;
                         double g11 = 0.0;
-                        for(i = 0; i < nAtoms; ++ i)
+                        for (int i = 0; i < nAtoms; ++ i)
                         {
                             g22 += s_system.fx[i] * s_system.fx[i] + 
                                    s_system.fy[i] * s_system.fy[i] + 
@@ -842,7 +849,7 @@ int main(int argc, char *argv[])
                         gamma = (g22 - g12) / g11;
                     }
 
-                    for(i = 0; i < nAtoms; ++ i)
+                    for (int i = 0; i < nAtoms; ++ i)
                     {
                         s_system.sx[i] = s_system.fx[i] + gamma * s_system.sx[i];
                         s_system.sy[i] = s_system.fy[i] + gamma * s_system.sy[i];
@@ -855,14 +862,14 @@ int main(int argc, char *argv[])
                 }
 
                 // communicate convergence
-                for(int an_id = 1; an_id < num_procs; ++ an_id) 
+                for (int an_id = 1; an_id < num_procs; ++ an_id) 
                 {
                     MPI::COMM_WORLD.Send(&converged, 1, MPI::INT, an_id, tag_99);
                 }
             }
             else
             {
-                MPI::COMM_WORLD.Recv(&converged, 1, MPI::INT, root_process,
+                MPI::COMM_WORLD.Recv(&converged, 1, MPI::INT, ROOT_PROC,
                                      tag_99, status);
             }
 
@@ -880,7 +887,7 @@ int main(int argc, char *argv[])
     {
         for (step = 1; step <= s_runset.nSteps; ++ step) 
         {
-            if (root_process == my_id) 
+            if (ROOT_PROC == my_id) 
             {
                 // gradually increase the reference temperature
                 if (step < s_runset.nHeating)
@@ -905,7 +912,7 @@ int main(int argc, char *argv[])
                 }
 
                 // update velocity for 1st half step
-                for(i = 0; i < nAtoms; ++ i)
+                for (int i = 0; i < nAtoms; ++ i)
                 {
                     // fix metal coordinates?
                     if (1 == s_metal.fix_pos && 1 == atom_info[i].is_metal)
@@ -922,7 +929,7 @@ int main(int argc, char *argv[])
 
                 // update position for the whole time step
                 // using velocity at half time step
-                for(i = 0; i < nAtoms; ++ i)
+                for (int i = 0; i < nAtoms; ++ i)
                 {
                     // fix metal coordinates?
                     if (1 == s_metal.fix_pos && 1 == atom_info[i].is_metal)
@@ -951,13 +958,13 @@ int main(int argc, char *argv[])
             
 
             // update velocities
-            if (root_process == my_id) 
+            if (ROOT_PROC == my_id) 
             {
                 // sum potential energies
                 sum_potential(s_system.potential);
 
                 // update velocity for 2nd half step
-                for(i = 0; i < nAtoms; ++ i)
+                for (int i = 0; i < nAtoms; ++ i)
                 {
                     // fix metal coordinates?
                     if (1 == s_metal.fix_pos && 1 == atom_info[i].is_metal)
@@ -1007,7 +1014,7 @@ int main(int argc, char *argv[])
                 }
              
                 // regularly write to gro file
-                if (0 == step % (s_runset.nSave*10))
+                if (0 == step % (s_runset.nSave * 10))
                 {
                     write_gro(file_gro, s_system, nAtoms, atom_info, step);
 
@@ -1026,7 +1033,7 @@ int main(int argc, char *argv[])
     
     sum_time_used(time_used, my_id, num_procs);
 
-    if (root_process == my_id) 
+    if (ROOT_PROC == my_id) 
     {
         fclose(file_dat);
         fclose(file_pq);
@@ -1034,7 +1041,7 @@ int main(int argc, char *argv[])
 
 #ifdef DEBUG
         int i;
-        for(i = 0; i < nAtoms; ++ i)
+        for (i = 0; i < nAtoms; ++ i)
         {
             printf("    f[%5d]= %12.5e, %12.5e, %12.5e\n", 
                     i, s_system.fx[i], s_system.fy[i], s_system.fz[i]);
@@ -1065,23 +1072,21 @@ int main(int argc, char *argv[])
     }
 
     // free arrays
-    for(int an_id = 0; an_id < num_procs; ++ an_id)
+    for (int an_id = 0; an_id < num_procs; ++ an_id)
     {
-        free(time_used[an_id]);
+        delete[] time_used[an_id];
     }
-    free(time_used);
+    delete[] time_used;
 
-    free(s_metal.cpff_chg);
-    free(s_metal.start_NP);
-    free(s_metal.end_NP);
+    delete[] s_metal.cpff_chg;
+    delete[] s_metal.start_NP;
+    delete[] s_metal.end_NP;
 
-    free(data_bonded);
-    data_bonded = NULL;
+    delete[] data_bonded;
 
-    for(mol = 0; mol < s_topol.mol_types; ++ mol) 
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
-        int atom_i;
-        for(atom_i = 0; atom_i < s_topol.atom_num[mol]; ++ atom_i) 
+        for (int atom_i = 0; atom_i < s_topol.atom_num[mol]; ++ atom_i)
         {
             free(s_topol.exclude[mol][atom_i]);
         }
@@ -1099,111 +1104,50 @@ int main(int argc, char *argv[])
         free(s_topol.constraint[mol]);
     }
 
-    free(s_topol.exclude);
+    delete[] s_topol.exclude;
+    delete[] s_topol.vsite_funct;
 
-    free(s_topol.bond_param);
-    free(s_topol.pair_param);
-    free(s_topol.angle_param);
-    free(s_topol.dihedral_param);
-    s_topol.bond_param = NULL;
-    s_topol.pair_param = NULL;
-    s_topol.angle_param = NULL;
-    s_topol.dihedral_param = NULL;
+    delete[] s_topol.bond_param;
+    delete[] s_topol.pair_param;
+    delete[] s_topol.angle_param;
+    delete[] s_topol.dihedral_param;
+    delete[] s_topol.vsite_4;
+    delete[] s_topol.constraint;
 
-    free(s_topol.vsite_4);
-    free(s_topol.vsite_funct);
-    s_topol.vsite_4 = NULL;
-    s_topol.vsite_funct = NULL;
-
-    free(s_topol.constraint);
-    s_topol.constraint = NULL;
-
-    free(s_topol.mol_num);
-    free(s_topol.atom_num);
-    for(mol = 0; mol < s_topol.mol_types; ++ mol) 
+    delete[] s_topol.mol_num;
+    delete[] s_topol.atom_num;
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
         free(s_topol.atom_param[mol]);
     }
-    free(s_topol.atom_param);
+    delete[] s_topol.atom_param;
 
     if (s_metal.min >=0 && s_metal.max >= s_metal.min)
     {
-        free(s_metal.inv_sqrt_dens);
-        s_metal.inv_sqrt_dens = NULL;
-
-        free(data_relay);
-        //free(s_metal.mat_relay);
-        data_relay = NULL;
-        //s_metal.mat_relay = NULL;
-        s_metal.vec_pq    = NULL;
-        s_metal.vec_ext   = NULL;
-        s_metal.diag_relay = NULL;
+        delete[] s_metal.inv_sqrt_dens;
+        delete[] data_relay;
     }
 
-    free(data_bicgstab);
+    delete[] data_bicgstab;
 
+    delete[] data_start_end;
+    delete[] data_long_start_end;
 
-    free(data_start_end);
-    free(data_long_start_end);
-    data_start_end      = NULL;
-    data_long_start_end = NULL;
+    delete[] atom_info;
+    delete[] mol_info;
 
-    s_task.start_mol   = NULL;
-    s_task.end_mol     = NULL;
-    s_task.start_atom  = NULL;
-    s_task.end_atom    = NULL;
-    s_task.start_metal = NULL;
-    s_task.end_metal   = NULL;
-    s_task.start_pair  = NULL;
-    s_task.end_pair    = NULL;
-
-    free(atom_info);
-    free(mol_info);
-    atom_info = NULL;
-    mol_info  = NULL;
-
-    free(data_potential);
-    data_potential = NULL;
-    s_system.potential   = NULL;
-    s_system.partial_pot = NULL;
-
+    delete[] data_potential;
 
     free(s_system.virial);
     free(s_system.partial_vir);
     free(data_vir);
 
-
     free(s_system.box);
-    s_system.box = NULL;
 
-    free(data_rvf);
-    data_rvf = NULL;
-    s_system.rx = NULL;
-    s_system.ry = NULL;
-    s_system.rz = NULL;
-    s_system.vx = NULL;
-    s_system.vy = NULL;
-    s_system.vz = NULL;
-    s_system.fx = NULL;
-    s_system.fy = NULL;
-    s_system.fz = NULL;
-    s_system.partial_fx = NULL;
-    s_system.partial_fy = NULL;
-    s_system.partial_fz = NULL;
-    s_system.old_rx = NULL;
-    s_system.old_ry = NULL;
-    s_system.old_rz = NULL;
-    s_system.old_fx = NULL;
-    s_system.old_fy = NULL;
-    s_system.old_fz = NULL;
-    s_system.sx = NULL;
-    s_system.sy = NULL;
-    s_system.sz = NULL;
+    delete[] data_rvf;
 
-    free(s_topol.nonbonded_param);
-    free(data_nonbonded);
-    s_topol.nonbonded_param = NULL;
-    data_nonbonded = NULL;
+    delete[] s_topol.nonbonded_param;
+    delete[] data_nonbonded;
 
     MPI::Finalize();
 

@@ -59,8 +59,6 @@ void mpi_cpff_vec_ext(Task& s_task, Metal& s_metal, RunSet& s_runset,
     double rCut2 = s_runset.rCut2;
     double rCut  = s_runset.rCut;
     
-    const int root_process = 0;
-    
     Vec_R rvec, evec;
     double rij2, rij, qi;
     double e_x_metal, e_y_metal, e_z_metal, pot_metal, e_field, v_field;
@@ -177,7 +175,7 @@ void mpi_cpff_vec_ext(Task& s_task, Metal& s_metal, RunSet& s_runset,
     }
 
     // last element, total charge of nanoparticle
-    if (my_id == root_process)
+    if (ROOT_PROC == my_id)
     {
         for (int iNP = 0; iNP < s_metal.n_NPs; ++ iNP)
         {
@@ -215,8 +213,6 @@ void mpi_cpff_mat_relay_COO(Task& s_task, Metal& s_metal, System& s_system, doub
 
     // the delta function
     double delta[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-
-    const int root_process = 0;
 
     //=======================================================================
     // Relay matrix for electrointeraction within metal nanoparticle
@@ -455,7 +451,7 @@ void mpi_cpff_mat_relay_COO(Task& s_task, Metal& s_metal, System& s_system, doub
     // submatrix [0 1_or_0 0]
     // dimension n_NPs x 1 for each metal atom
     // saved on root processor
-    if (root_process == my_id)
+    if (ROOT_PROC == my_id)
     {
         for (int iNP = 0; iNP < n_NPs; ++ iNP)
         {
@@ -723,7 +719,7 @@ void mpi_cpff_force(Task& s_task, Metal& s_metal, RunSet& s_runset,
         for (int j_metal = 0; j_metal <= max_metal; ++ j_metal)
         {
             const int j = j_metal - min_metal;
-            if(j == i) { continue; }
+            if (j == i) { continue; }
 
             // distances 
             Vec_R rvec;
@@ -917,13 +913,13 @@ void eval_cpff_pot(int n_mat, int n_NPs, double** mat_relay, double* vec_ext, do
 
     double e_qV    = 0.0;
     double e_qCq2 = 0.0;
-    for(i = 0; i < n_metal; i ++)
+    for (i = 0; i < n_metal; i ++)
     {
         double Vi = vec_ext[n_metal*3 + i];
         double qi = vec_pq[n_metal*3 + i];
         e_qV += qi * Vi;
 
-        for(j = 0; j < n_metal; j ++)
+        for (j = 0; j < n_metal; j ++)
         {
             double Cij = -mat_relay[n_metal*3 + i][n_metal*3 + j];
             double qj = vec_pq[n_metal*3 + j];
@@ -934,20 +930,20 @@ void eval_cpff_pot(int n_mat, int n_NPs, double** mat_relay, double* vec_ext, do
     double e__pE  = 0.0;
     double e_pAp2 = 0.0;
     double e__pMq = 0.0;
-    for(i = 0; i < n_metal*3; i ++)
+    for (i = 0; i < n_metal*3; i ++)
     {
         double Ei = vec_ext[i];
         double pi = vec_pq[i];
         e__pE -= pi * Ei;
 
-        for(j = 0; j < n_metal*3; j ++)
+        for (j = 0; j < n_metal*3; j ++)
         {
             double Aij = mat_relay[i][j];
             double pj = vec_pq[j];
             e_pAp2 += 0.5 * pi * Aij * pj;
         }
 
-        for(j = 0; j < n_metal; j ++)
+        for (j = 0; j < n_metal; j ++)
         {
             double Mij = -mat_relay[i][n_metal*3 + j];
             double qj = vec_pq[n_metal*3 + j];

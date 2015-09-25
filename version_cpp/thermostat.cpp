@@ -40,11 +40,11 @@ void kinetic_energy(System& s_system, int nAtoms, Atom_Info *atom_info)
     double m;
 
     int i;
-    for(i = 0; i < nAtoms; i ++)
+    for (i = 0; i < nAtoms; i ++)
     {
         m = atom_info[i].mass;
         // ignore the virtual sites
-        if(m > 0.0)
+        if (m > 0.0)
         {
             eKsum_xx += m * s_system.vx[i] * s_system.vx[i];
             eKsum_yy += m * s_system.vy[i] * s_system.vy[i];
@@ -77,10 +77,10 @@ void remove_comm(int nAtoms, Atom_Info* atom_info, System& s_system)
     m_sum  = 0.0;
 
     int i;
-    for(i = 0; i < nAtoms; ++ i) 
+    for (i = 0; i < nAtoms; ++ i) 
     {
         m = atom_info[i].mass;
-        if(m > 0.0)
+        if (m > 0.0)
         {
             vx_com += s_system.vx[i] * m;
             vy_com += s_system.vy[i] * m;
@@ -94,11 +94,11 @@ void remove_comm(int nAtoms, Atom_Info* atom_info, System& s_system)
     vz_com /= m_sum;
 
     // zero center of mass velocity
-    for(i = 0; i < nAtoms; i ++) 
+    for (i = 0; i < nAtoms; i ++) 
     {
         m = atom_info[i].mass;
         // ignore the virtual sites
-        if(m > 0.0)
+        if (m > 0.0)
         {
             s_system.vx[i] -= vx_com;
             s_system.vy[i] -= vy_com;
@@ -179,7 +179,7 @@ void nose_hoover_chain(RunSet& s_runset, System& s_system, int nAtoms)
 
     // update velocities, kinetic energy, and temperature
     int i;
-    for(i = 0; i < nAtoms; i ++)
+    for (i = 0; i < nAtoms; i ++)
     {
         s_system.vx[i] *= scale;
         s_system.vy[i] *= scale;

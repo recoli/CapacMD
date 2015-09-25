@@ -25,7 +25,6 @@
 
 #include <mpi.h>
 #include <sys/time.h>
-#include <boost/scoped_ptr.hpp>
 
 #include <cmath>
 #include <cstdio>
@@ -70,20 +69,20 @@ void scale_vec_2(const double fij, const Vec_R* ptr_rvec, Vec_R* ptr_fvec)
 double pbc(double dx, double xbox)
 {
     if     (dx < -0.5*xbox) {dx += xbox;}
-    else if(dx >  0.5*xbox) {dx -= xbox;}
+    else if (dx >  0.5*xbox) {dx -= xbox;}
     return dx;
 }
 
 void pbc_12(Vec_R* ptr_r, const double* box)
 {
     if     (ptr_r->x < -box[3]) { ptr_r->x += box[0]; }
-    else if(ptr_r->x >  box[3]) { ptr_r->x -= box[0]; }
+    else if (ptr_r->x >  box[3]) { ptr_r->x -= box[0]; }
                                                       
     if     (ptr_r->y < -box[4]) { ptr_r->y += box[1]; }
-    else if(ptr_r->y >  box[4]) { ptr_r->y -= box[1]; }
+    else if (ptr_r->y >  box[4]) { ptr_r->y -= box[1]; }
                                                       
     if     (ptr_r->z < -box[5]) { ptr_r->z += box[2]; }
-    else if(ptr_r->z >  box[5]) { ptr_r->z -= box[2]; }
+    else if (ptr_r->z >  box[5]) { ptr_r->z -= box[2]; }
 }
 
 //==================================
@@ -136,7 +135,7 @@ void apply_pbc(const int nMols, const Mol_Info* mol_info,
 
     // loop over molecules
     int im;
-    for(im = 0; im < nMols; ++ im)
+    for (im = 0; im < nMols; ++ im)
     {
         // put the center of molecule in the box
         int first_atom = mol_info[im].mini;
@@ -144,24 +143,24 @@ void apply_pbc(const int nMols, const Mol_Info* mol_info,
         const int mid = (first_atom + last_atom) / 2;
 
         if     (rx[mid] > box[0]) { rx[mid] -= box[0]; }
-        else if(rx[mid] < 0.0   ) { rx[mid] += box[0]; }
+        else if (rx[mid] < 0.0   ) { rx[mid] += box[0]; }
         if     (ry[mid] > box[1]) { ry[mid] -= box[1]; }
-        else if(ry[mid] < 0.0   ) { ry[mid] += box[1]; }
+        else if (ry[mid] < 0.0   ) { ry[mid] += box[1]; }
         if     (rz[mid] > box[2]) { rz[mid] -= box[2]; }
-        else if(rz[mid] < 0.0   ) { rz[mid] += box[2]; }
+        else if (rz[mid] < 0.0   ) { rz[mid] += box[2]; }
 
         // apply PBC to other atoms in this molecule
         int i;
-        for(i = first_atom; i <= last_atom; ++ i)
+        for (i = first_atom; i <= last_atom; ++ i)
         {
-            if(mid == i) { continue; }
+            if (mid == i) { continue; }
 
             if     (rx[i] - rx[mid] >  half_box[0]) { rx[i] -= box[0]; }
-            else if(rx[i] - rx[mid] < -half_box[0]) { rx[i] += box[0]; }
+            else if (rx[i] - rx[mid] < -half_box[0]) { rx[i] += box[0]; }
             if     (ry[i] - ry[mid] >  half_box[1]) { ry[i] -= box[1]; }
-            else if(ry[i] - ry[mid] < -half_box[1]) { ry[i] += box[1]; }
+            else if (ry[i] - ry[mid] < -half_box[1]) { ry[i] += box[1]; }
             if     (rz[i] - rz[mid] >  half_box[2]) { rz[i] -= box[2]; }
-            else if(rz[i] - rz[mid] < -half_box[2]) { rz[i] += box[2]; }
+            else if (rz[i] - rz[mid] < -half_box[2]) { rz[i] += box[2]; }
         }
     }
 }
@@ -177,15 +176,15 @@ void find_start_end(int* start_group, int* end_group,
     int avg_num_per_process = total_num / num_procs;
     int residual = total_num % num_procs;
 
-    for(int an_id = 0; an_id < num_procs; ++ an_id)
+    for (int an_id = 0; an_id < num_procs; ++ an_id)
     {
         int num_in_group;
 
         // processors with smaller id than the residual will carry one more element
-        if(an_id < residual) { num_in_group = avg_num_per_process + 1;}
+        if (an_id < residual) { num_in_group = avg_num_per_process + 1;}
         else { num_in_group = avg_num_per_process; }
 
-        if(0 == an_id) { start_group[0] = 0; }
+        if (0 == an_id) { start_group[0] = 0; }
         else { start_group[an_id] = end_group[an_id - 1] + 1; }
 
         end_group[an_id] = start_group[an_id] + num_in_group - 1;
@@ -203,15 +202,15 @@ void find_start_end_long(long int* start_group, long int* end_group,
     long int avg_num_per_process = total_num / num_procs;
     int residual = total_num % num_procs;
 
-    for(int an_id = 0; an_id < num_procs; ++ an_id)
+    for (int an_id = 0; an_id < num_procs; ++ an_id)
     {
         long int num_in_group;
 
         // processors with smaller id than the residual will carry one more element
-        if(an_id < residual) { num_in_group = avg_num_per_process + 1; }
+        if (an_id < residual) { num_in_group = avg_num_per_process + 1; }
         else { num_in_group = avg_num_per_process; }
 
-        if(0 == an_id) { start_group[0] = 0; }
+        if (0 == an_id) { start_group[0] = 0; }
         else { start_group[an_id] = end_group[an_id - 1] + 1; }
 
         end_group[an_id] = start_group[an_id] + num_in_group - 1;
@@ -227,23 +226,22 @@ void sum_time_used(double** time_used, const int my_id, const int num_procs)
     // gather time_used to root processor
     int tag_101 = 101;
 
-    const int root_process = 0;
     MPI::Status status;
 
-    if(root_process == my_id)
+    if (ROOT_PROC == my_id)
     {
-        for(int an_id = 1; an_id < num_procs; an_id++) 
+        for (int an_id = 1; an_id < num_procs; an_id++) 
         {
-            MPI::COMM_WORLD.Recv(&(time_used[an_id][0]), 15, MPI::DOUBLE, an_id, tag_101, status);
+            MPI::COMM_WORLD.Recv(&(time_used[an_id][0]), N_TIMER, MPI::DOUBLE,
+                                 an_id, tag_101, status);
         }
 
         // sum up time usage
-        for(int an_id = 0; an_id < num_procs; ++ an_id)
+        for (int an_id = 0; an_id < num_procs; ++ an_id)
         {
             time_used[an_id][0] = 0.0;
-
-            int it;
-            for(it = 1; it < 15; ++ it)
+            
+            for (int it = 1; it < N_TIMER; ++ it)
             {
                 time_used[an_id][0] += time_used[an_id][it];
             }
@@ -251,28 +249,28 @@ void sum_time_used(double** time_used, const int my_id, const int num_procs)
     }
     else
     {
-        MPI::COMM_WORLD.Send(&(time_used[my_id][0]), 15, MPI::DOUBLE, root_process, tag_101);
+        MPI::COMM_WORLD.Send(&(time_used[my_id][0]), N_TIMER, MPI::DOUBLE, ROOT_PROC, tag_101);
     }
 }
 
 
 void analyze_time_used(double** time_used, const int num_procs)
 {
-    double aver_time[15];
-    double max_time[15];
-    double imbalance[15];
+    double aver_time[N_TIMER];
+    double max_time[N_TIMER];
+    double imbalance[N_TIMER];
 
-    for(int it = 0; it < 15; ++ it)
+    for (int it = 0; it < N_TIMER; ++ it)
     {
         aver_time[it] = 0.0;
         max_time[it]  = 0.0;
         imbalance[it]  = 0.0;
 
-        for(int an_id = 0; an_id < num_procs; ++ an_id)
+        for (int an_id = 0; an_id < num_procs; ++ an_id)
         {
             aver_time[it] += time_used[an_id][it];
 
-            if(time_used[an_id][it] > max_time[it])
+            if (time_used[an_id][it] > max_time[it])
             {
                 max_time[it] = time_used[an_id][it];
             }
@@ -281,7 +279,7 @@ void analyze_time_used(double** time_used, const int num_procs)
         aver_time[it] /= num_procs;
 
         // skip evaluation of imbalance for very short time usage
-        if(aver_time[it] > 0.1)
+        if (aver_time[it] > 0.1)
         {
             imbalance[it] = (max_time[it] / aver_time[it] - 1.0) * 100.0;
         }
@@ -314,7 +312,7 @@ void sum_potential(double *potential)
     potential[0] = 0.0;
 
     int i;
-    for(i = 1; i < 15; i++)
+    for (i = 1; i < 15; i++)
     {
         potential[0] += potential[i];
     }
@@ -383,12 +381,12 @@ void mpi_qsc_dens(Task& s_task, const double rCut2, Metal& s_metal,
     int i, j;
 
     // compute densities and get inv_sqrt of the densities
-    for(i = start_metal; i <= end_metal; ++ i)
+    for (i = start_metal; i <= end_metal; ++ i)
     {
         int i_metal = i - s_metal.min;
         double qsc_dens = 0.0;
 
-        for(j = s_metal.min; j <= s_metal.max; ++ j)
+        for (j = s_metal.min; j <= s_metal.max; ++ j)
         {
             if (j == i) { continue; }
 
@@ -401,7 +399,7 @@ void mpi_qsc_dens(Task& s_task, const double rCut2, Metal& s_metal,
 
 
             // using cutoff for Q-SC potential
-            if(rij2 < rCut2)
+            if (rij2 < rCut2)
             {
                 qsc_dens += pow((s_metal.qsc_a / sqrt(rij2)), s_metal.qsc_m);
             }
@@ -417,12 +415,10 @@ void mpi_qsc_dens(Task& s_task, const double rCut2, Metal& s_metal,
     int tag_22 = 22; // any to any, num
     int tag_23 = 23; // any to any, inv_sqrt_dens
     
-    const int root_process = 0;
-
     int start, num;
 
     // master: receive data
-    if (root_process == my_id)
+    if (ROOT_PROC == my_id)
     {
         for (int an_id = 1; an_id < num_procs; ++ an_id)
         {
@@ -437,12 +433,12 @@ void mpi_qsc_dens(Task& s_task, const double rCut2, Metal& s_metal,
         start = start_metal - s_metal.min;
         num = end_metal - start_metal + 1;
  
-        MPI::COMM_WORLD.Send(&start, 1, MPI::INT, root_process, tag_21);
-        MPI::COMM_WORLD.Send(&num,   1, MPI::INT, root_process, tag_22);
-        MPI::COMM_WORLD.Send(&(s_metal.inv_sqrt_dens[start]), num, MPI::DOUBLE, root_process, tag_23);
+        MPI::COMM_WORLD.Send(&start, 1, MPI::INT, ROOT_PROC, tag_21);
+        MPI::COMM_WORLD.Send(&num,   1, MPI::INT, ROOT_PROC, tag_22);
+        MPI::COMM_WORLD.Send(&(s_metal.inv_sqrt_dens[start]), num, MPI::DOUBLE, ROOT_PROC, tag_23);
     }
 
-    MPI::COMM_WORLD.Bcast(&(s_metal.inv_sqrt_dens[0]), s_metal.num, MPI::DOUBLE, root_process);
+    MPI::COMM_WORLD.Bcast(&(s_metal.inv_sqrt_dens[0]), s_metal.num, MPI::DOUBLE, ROOT_PROC);
 }
 
 
@@ -465,11 +461,11 @@ void mpi_qsc_force(Task& s_task, const double rCut2, Metal& s_metal,
     // compute forces
     cm_2 = s_metal.qsc_c * s_metal.qsc_m / 2.0;
 
-    for(i_atom = start_metal; i_atom <= end_metal; ++ i_atom)
+    for (i_atom = start_metal; i_atom <= end_metal; ++ i_atom)
     {
         int i_metal = i_atom - s_metal.min;
 
-        for(j_atom = s_metal.min; j_atom <= s_metal.max; ++ j_atom)
+        for (j_atom = s_metal.min; j_atom <= s_metal.max; ++ j_atom)
         {
             if (j_atom == i_atom) { continue; }
 
@@ -490,7 +486,7 @@ void mpi_qsc_force(Task& s_task, const double rCut2, Metal& s_metal,
             //===================================================================
 
             // using cutoff for Q-SC potential
-            if(rij2 < rCut2)
+            if (rij2 < rCut2)
             {
                 rij = sqrt(rij2);
                 a_rij = s_metal.qsc_a / rij,
@@ -722,7 +718,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
         rij6 = rij2 * rij2 * rij2;
         rij12 = rij6 * rij6;
 
-        if(1 == s_runset.use_vdw && 0 == is_14_pair)
+        if (1 == s_runset.use_vdw && 0 == is_14_pair)
         {
             // The shifted force method for Lennard-Jones potential
             // Ref: Toxvaerd and Dyre, J. Chem. Phys. 2011, 134, 081102
@@ -741,7 +737,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
                              (c12 * inv_rc12 - c6 * inv_rc6));
         }
 
-        else if(0 == s_runset.use_vdw || 1 == is_14_pair)
+        else if (0 == s_runset.use_vdw || 1 == is_14_pair)
         {
             fij = (c12 * 2.0 / rij12 - c6 / rij6) * 6.0 / rij2 * scaleLJ;
 
@@ -761,7 +757,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
     if (qi!=0.0 && qj!=0.0)
     {
 
-        if(1 == s_runset.use_coulomb && 0 == is_14_pair)
+        if (1 == s_runset.use_coulomb && 0 == is_14_pair)
         {
             // The damped shifted force (DSF) approach for electrostatics
             // Ref.: Fennell and Gezelter, J. Chem. Phys. 2006, 124, 234104
@@ -780,7 +776,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
                             (erfc_arij / rij - erfc_arCut + wolfConst * (rij - rCut));
         }
 
-        else if(0 == s_runset.use_coulomb || 1 == is_14_pair)
+        else if (0 == s_runset.use_coulomb || 1 == is_14_pair)
         {
             fij = scaleQQ * FQQ * qi * qj / (rij2 * rij);
 
@@ -1017,7 +1013,7 @@ Vec_3 compute_angle_5(double rxi, double ryi, double rzi,
                                   a0, ka,
                                   box, potential, virial);
 
-    if(kb_ub > 0.0)
+    if (kb_ub > 0.0)
     {
         Vec_2 bond_force;
         bond_force = compute_bond_1(rxi, ryi, rzi,
@@ -1339,7 +1335,7 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
 void print_vector(int n, double* A)
 {
     int row;
-    for(row = 0; row < n; row ++)
+    for (row = 0; row < n; row ++)
     {
         printf("%12.6e\n", A[row]);
     }
@@ -1352,9 +1348,9 @@ void print_vector(int n, double* A)
 void print_matrix(int n, double** A)
 {
     int row, col;
-    for(row = 0; row < n; row ++)
+    for (row = 0; row < n; row ++)
     {
-        for(col = 0; col < n; col ++)
+        for (col = 0; col < n; col ++)
         {
             printf("%12.3e", A[row][col]);
         }
@@ -1369,9 +1365,9 @@ void print_matrix(int n, double** A)
 void print_rnd_matrix(int nrows, int ncols, double** A)
 {
     int row, col;
-    for(row = 0; row < nrows; row ++)
+    for (row = 0; row < nrows; row ++)
     {
-        for(col = 0; col < ncols; col ++)
+        for (col = 0; col < ncols; col ++)
         {
             printf("%12.3e", A[row][col]);
         }
@@ -1451,10 +1447,10 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
             rvec.z = s_system.rz[j] - rzi;
 
             pbc_12(&rvec, s_system.box);
-            if(rvec.x >= rCut && rvec.y >= rCut && rvec.z >= rCut ) { continue; }
+            if (rvec.x >= rCut && rvec.y >= rCut && rvec.z >= rCut ) { continue; }
 
             rij2 = dist_2(&rvec);
-            if(rij2 >= rCut2) { continue; }
+            if (rij2 >= rCut2) { continue; }
 
 
             // get nonbonded parameters
@@ -1465,7 +1461,7 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
 
 
             // erf_vdw potential
-            if(4 == funct)
+            if (4 == funct)
             {
                 double c6    = s_topol.nonbonded_param[iType][jType].C6;
                 double c12   = s_topol.nonbonded_param[iType][jType].C12;
@@ -1476,7 +1472,7 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
             }
 
             // Morse potential
-            else if(3 == funct)
+            else if (3 == funct)
             {
                 double morse_D = s_topol.nonbonded_param[iType][jType].A;
                 double morse_a = s_topol.nonbonded_param[iType][jType].B;
@@ -1488,7 +1484,7 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
             }
 
             // Buckingham potential
-            else if(2 == funct)
+            else if (2 == funct)
             {
                 double buck_A = s_topol.nonbonded_param[iType][jType].A;
                 double buck_B = s_topol.nonbonded_param[iType][jType].B;
@@ -1500,7 +1496,7 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
             }
 
             // Lennard-Jones potential
-            else if(1 == funct)
+            else if (1 == funct)
             {
                 double c6  = s_topol.nonbonded_param[iType][jType].C6;
                 double c12 = s_topol.nonbonded_param[iType][jType].C12;
@@ -1533,7 +1529,7 @@ void zero_force_pot_vir(int nAtoms, double* fx, double* fy, double* fz,
 {
     // zero force
     int i, j;
-    for(i = 0; i < nAtoms; i++)
+    for (i = 0; i < nAtoms; i++)
     {
         fx[i] = 0.0;
         fy[i] = 0.0;
@@ -1541,15 +1537,15 @@ void zero_force_pot_vir(int nAtoms, double* fx, double* fy, double* fz,
     }
     
     // zero potential
-    for(i = 0; i < 15; i++)
+    for (i = 0; i < 15; i++)
     {
         potential[i] = 0.0;
     }
     
     // zero virial
-    for(i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++)
     {
-        for(j = 0; j < 3; j++)
+        for (j = 0; j < 3; j++)
         {
             virial[i][j] = 0.0;
         }
@@ -1570,14 +1566,14 @@ void build_vsites(int mol_start, int mol_end,
 {
     // loop over molecules
     int im;
-    for(im = mol_start; im <= mol_end; ++ im)
+    for (im = mol_start; im <= mol_end; ++ im)
     {
         int first_atom = mol_info[im].mini;
         int mol = atom_info[first_atom].iMol;
     
         // build each virtual site using absolute value (a,b,c)
         int iVSite;
-        for(iVSite = 0; iVSite < nVSites[mol]; ++ iVSite)
+        for (iVSite = 0; iVSite < nVSites[mol]; ++ iVSite)
         {
             int i, j, k, s;
             double a, b, c;
@@ -2049,7 +2045,7 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
             }
 
             iter ++;
-            if(iter > MAX_ITER) { break; }
+            if (iter > MAX_ITER) { break; }
         }
 
         if (0 == done)
@@ -2076,7 +2072,6 @@ void mpi_force(Task& s_task, Topol& s_topol,
     double t0, t1;
     struct timeval tv;
 
-    const int root_process = 0;
     MPI::Status status;
 
     int tag_11 = 11; // slave to master, partial_fx, partial_fy, partial_fz 
@@ -2085,7 +2080,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
 
     //======== build virtual sites on root processor ====================
 
-    if(my_id == root_process) 
+    if (ROOT_PROC == my_id) 
     {
         // build all virtual sites before distributing atomic coordinates
         build_vsites(0, s_topol.n_mols-1, mol_info, atom_info,
@@ -2099,7 +2094,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
     gettimeofday(&tv, NULL);
     t0 = tv.tv_sec + tv.tv_usec * 1.0e-6;
 
-    MPI::COMM_WORLD.Bcast(&(s_system.rx[0]), s_topol.n_atoms*DIM, MPI::DOUBLE, root_process);
+    MPI::COMM_WORLD.Bcast(&(s_system.rx[0]), s_topol.n_atoms*DIM, MPI::DOUBLE, ROOT_PROC);
 
     zero_force_pot_vir(s_topol.n_atoms, s_system.fx, s_system.fy, s_system.fz, 
                        s_system.potential, s_system.virial);
@@ -2134,7 +2129,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
 
 
     // compute QSC densities and forces
-    if(s_metal.min >=0 && s_metal.num > 0)
+    if (s_metal.min >=0 && s_metal.num > 0)
     {
         mpi_qsc_dens(s_task, rCut2, s_metal, s_system, my_id, num_procs);
 
@@ -2151,7 +2146,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
         t0 = t1;
 
         // CPIM model
-        if(s_metal.use_cpff)
+        if (s_metal.use_cpff)
         {
             // construct s_metal.vec_ext
             mpi_cpff_vec_ext(s_task, s_metal, s_runset, atom_info, s_topol,
@@ -2206,7 +2201,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
 
 
     //======== root processor ==========================
-    if (my_id == root_process)
+    if (ROOT_PROC == my_id)
     {
         // external electric field
         for (int i = 0; i < s_topol.n_atoms; ++ i)
@@ -2264,9 +2259,9 @@ void mpi_force(Task& s_task, Topol& s_topol,
     else 
     {
         // send nonbonded & QSC forces back to root processor
-        MPI::COMM_WORLD.Send(&(s_system.fx[0]), s_topol.n_atoms*DIM, MPI::DOUBLE, root_process, tag_11);
-        MPI::COMM_WORLD.Send(&(s_system.virial[0][0]), DIM*DIM, MPI::DOUBLE, root_process, tag_12);
-        MPI::COMM_WORLD.Send(&(s_system.potential[0]), 15, MPI::DOUBLE, root_process, tag_13);
+        MPI::COMM_WORLD.Send(&(s_system.fx[0]), s_topol.n_atoms*DIM, MPI::DOUBLE, ROOT_PROC, tag_11);
+        MPI::COMM_WORLD.Send(&(s_system.virial[0][0]), DIM*DIM, MPI::DOUBLE, ROOT_PROC, tag_12);
+        MPI::COMM_WORLD.Send(&(s_system.potential[0]), 15, MPI::DOUBLE, ROOT_PROC, tag_13);
     }
 
     gettimeofday(&tv, NULL);

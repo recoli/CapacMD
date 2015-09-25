@@ -23,8 +23,6 @@
  with this program; if not, see http://www.gnu.org/licenses/.
  */
 
-#include <boost/scoped_ptr.hpp>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -44,7 +42,7 @@ void substr(char *dest, const char *src, unsigned int start, unsigned int cnt)
 /// \brief read the next line from file
 void read_next_line(FILE *file_par, char *line, char *subline)
 {
-    while(1)
+    while (1)
     {
         if (fgets(line, MAX_STR_LEN, file_par) != NULL)
         {
@@ -90,8 +88,8 @@ void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal)
         else if (0 == strcmp(option, "time_step_in_ps")) { s_runset.dt     = atof(value); }
         else if (0 == strcmp(option, "save_step"      )) { s_runset.nSave  = atoi(value); }
 
-        else if (0 == strcmp(option, "vdw_type"    )) { strcpy(s_runset.vdw_type,     value); }
-        else if (0 == strcmp(option, "coulomb_type")) { strcpy(s_runset.coulomb_type, value); }
+        else if (0 == strcmp(option, "vdw_type"    )) { s_runset.vdw_type = std::string(value); }
+        else if (0 == strcmp(option, "coulomb_type")) { s_runset.coulomb_type = std::string(value); }
 
         else if (0 == strcmp(option, "cut_off_radius")) { s_runset.rCut    = atof(value); }
         else if (0 == strcmp(option, "coulomb_alpha" )) { s_runset.w_alpha = atof(value); }

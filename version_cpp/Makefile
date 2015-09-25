@@ -1,5 +1,5 @@
 CC=mpicxx
-CFLAGS=-O3 -Wall -std=c++0x -I/Users/lixin/boost_1_59_0
+CFLAGS=-O3 -Wall -std=c++0x
 OBJ=file.o force.o thermostat.o \
 	 main.o my_malloc.o cpff.o bicg_stab.o
 
