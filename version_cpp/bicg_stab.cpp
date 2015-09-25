@@ -548,7 +548,7 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
                     printf("Error: bicg_stab not converged. rTr= %e, bTb= %e\n", rTr, bTb);
                 }
 
-                exit(1);
+                exit(-1);
             }
         }
     }

@@ -1242,7 +1242,7 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
         {
             printf("<> Error: phi0 is not equal to 0 or pi!\n");
             printf("    phi0=%f, kphi=%f, n=%d\n", phi0, kphi, n);
-            exit(1);
+            exit(-1);
         }
     }
     else if (n == 2)
@@ -1260,7 +1260,7 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
         {
             printf("<> Error: phi0 is not equal to 0 or pi!\n");
             printf("    phi0=%f, kphi=%f, n=%d\n", phi0, kphi, n);
-            exit(1);
+            exit(-1);
         }
     }
     else if (n == 3)
@@ -1281,7 +1281,7 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
         {
             printf ("<> Error: phi0 is not equal to 0 or pi!\n");
             printf ("    phi0=%f, kphi=%f, n=%d\n", phi0, kphi, n);
-            exit(1);
+            exit(-1);
         }
     }
     else if (n == 4)
@@ -1301,14 +1301,14 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
         {
             printf("<> Error: phi0 is not equal to 0 or pi!\n");
             printf("    phi0=%f, kphi=%f, n=%d\n", phi0, kphi, n);
-            exit(1);
+            exit(-1);
         }
     }
     else
     {
         printf("<> Error: n is not equal to 1, 2, 3 or 4!\n");
         printf("    phi0=%f, kphi=%f, n=%d\n", phi0, kphi, n);
-        exit(1);
+        exit(-1);
     }
 
     c1 *= -1.0;
@@ -1960,7 +1960,7 @@ void rattle_1st(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
         if (0 == done) 
         {
             printf( "RATTLE_1 not converged!\n");
-            exit(1);
+            exit(-1);
         }
     }
 }
@@ -2050,7 +2050,7 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
         if (0 == done)
         {
             printf( "RATTLE_2 not converged!\n");
-            exit(1);
+            exit(-1);
         }
     }
 }

@@ -35,7 +35,7 @@ void read_next_line(FILE* file_par, char* line, char* subline);
 // read md options from input_mdset
 //==================================
 
-void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal);
+void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal, int my_id);
 
 //=====================
 // read input_gro file

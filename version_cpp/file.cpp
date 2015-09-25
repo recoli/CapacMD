@@ -29,6 +29,9 @@
 #include <cassert>
 
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include "typedef.hpp"
 
@@ -55,72 +58,68 @@ void read_next_line(FILE *file_par, char *line, char *subline)
         else
         {
             printf("Error while reading file_par!\n");
-            exit(1);
+            exit(-1);
         }
     }
 }
 
-/// \brief read md options from input_mdset
-void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal)
+/// \brief read MD settings from input_mdset
+void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal, int my_id)
 {
-    FILE* f_set;
-    char c_str_line[MAX_STR_LEN], c_str_option[MAX_STR_LEN], c_str_value[MAX_STR_LEN];
-    std::string option, value;
-
-    f_set = fopen(input_mdset.c_str(), "r") ;
-    if (NULL == f_set)
+    std::ifstream input;
+    input.open(input_mdset);
+    
+    for (std::string line; getline(input, line); )
     {
-        printf("Cannot open %s for input!\n", input_mdset.c_str());
-        exit(1);
-    }
-
-    while (fgets(c_str_line, MAX_STR_LEN, f_set) != NULL)
-    {
-        sscanf(c_str_line, "%s%s", c_str_option, c_str_value);
-        option = std::string(c_str_option);
-        value  = std::string(c_str_value);
-
+        std::string option, value;
+        std::istringstream(line) >> option >> value;
+        
         if      (std::string("run_type") == option) { s_runset.run_type = value; }
         else if (std::string("ensemble") == option) { s_runset.ensemble = value; }
-
+        
         else if (std::string("em_steps"       ) == option) { s_runset.em_steps  = std::stoi(value); }
         else if (std::string("em_length_in_nm") == option) { s_runset.em_length = std::stod(value); }
         else if (std::string("em_tolerance"   ) == option) { s_runset.em_tol    = std::stod(value); }
-
+        
         else if (std::string("number_of_steps") == option) { s_runset.nSteps = std::stoi(value); }
         else if (std::string("time_step_in_ps") == option) { s_runset.dt     = std::stod(value); }
         else if (std::string("save_step"      ) == option) { s_runset.nSave  = std::stoi(value); }
-
+        
         else if (std::string("vdw_type")     == option) { s_runset.vdw_type     = value; }
         else if (std::string("coulomb_type") == option) { s_runset.coulomb_type = value; }
-
+        
         else if (std::string("cut_off_radius") == option) { s_runset.rCut    = std::stod(value); }
         else if (std::string("coulomb_alpha" ) == option) { s_runset.w_alpha = std::stod(value); }
-
+        
         else if (std::string("heating_steps") == option) { s_runset.nHeating = std::stoi(value); }
         else if (std::string("ref_T_in_K"   ) == option) { s_runset.ref_temp = std::stod(value); }
         else if (std::string("tau_T_in_ps"  ) == option) { s_runset.tau_temp = std::stod(value); }
-
+        
         /*
-        else if (std::string("ref_P_in_bar") == option) { s_runset.ref_pres = std::stoi(value); }
-        else if (std::string("tau_P_in_ps" ) == option) { s_runset.tau_pres = std::stoi(value); }
-        */
-
+         else if (std::string("ref_P_in_bar") == option) { s_runset.ref_pres = std::stoi(value); }
+         else if (std::string("tau_P_in_ps" ) == option) { s_runset.tau_pres = std::stoi(value); }
+         */
+        
         else if (std::string("fix_metal") == option) { s_metal.fix_pos  = std::stoi(value); }
         else if (std::string("use_cpff" ) == option) { s_metal.use_cpff = std::stoi(value); }
-
+        
         // input external electric field in V/nm, or eV/(e nm)
         // converting to MD units kJ/mol/(e nm)
         else if (std::string("external_Ex") == option) { s_runset.external_efield[0] = std::stod(value) * EV2KJMOL; }
         else if (std::string("external_Ey") == option) { s_runset.external_efield[1] = std::stod(value) * EV2KJMOL; }
         else if (std::string("external_Ez") == option) { s_runset.external_efield[2] = std::stod(value) * EV2KJMOL; }
-
+        
         else if (std::string("") == option) { continue; }
-        else    { printf("Warning: unkonwn option %s in %s\n",
-                         option.c_str(), input_mdset.c_str()); }
+        else
+        {
+            if (ROOT_PROC == my_id)
+            {
+                std::cout << ">>> WARNING: unknown option " << option << " in " << input_mdset << std::endl << std::endl;
+            }
+        }
     }
-
-    fclose(f_set);
+    
+    input.close();
 }
 
 /// \brief read input_gro file
@@ -259,7 +258,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     if (NULL == file_par)
     {
         printf("Error: Cannot open param file %s!\n", input_param.c_str()) ;
-        exit(1);
+        exit(-1);
     }
 
     // 1-4 scaling factors
@@ -271,7 +270,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     else
     {
         printf("Error in %s: expected SCALE_LJ_QQ in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // number of molecule types
@@ -283,7 +282,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     else
     {
         printf("Error in %s: expected MOLECULES in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
 
@@ -319,7 +318,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
     }
 
@@ -343,7 +342,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     else
     {
         printf("Error in %s: expected NONBONDED in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // bonded potentials: bond, pair, angle, dihedral
@@ -369,7 +368,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
 
         // pairs
@@ -389,7 +388,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
 
         // angles
@@ -409,7 +408,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
 
         // dihedrals
@@ -429,7 +428,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
 
         // virtual_sites
@@ -449,7 +448,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
 
         // constraints
@@ -469,7 +468,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
         else
         {
             printf("Error in %s: expected %s in line\n%s", input_param.c_str(), my_string, line);
-            exit(1);
+            exit(-1);
         }
     }
 
@@ -491,7 +490,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     else
     {
         printf("Error in %s: expected MM_METAL in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // Quantum Sutton-Chen parameters
@@ -502,7 +501,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     if (0 != strcmp(subline, "QSC_METAL"))
     {
         printf("Error in %s: expected QSC_METAL in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // atomic polarizability and capacitance, in atomic unit
@@ -511,7 +510,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     if (0 != strcmp(subline, "CPFF_METAL"))
     {
         printf("Error in %s: expected CPFF_METAL in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // multi-NPs
@@ -520,7 +519,7 @@ void read_param_1(std::string input_param, Topol& s_topol, Metal& s_metal)
     if (0 != strcmp(subline, "NANOPARTICLES"))
     {
         printf("Error in %s: expected NANOPARTICLES in line\n%s", input_param.c_str(), line);
-        exit(1);
+        exit(-1);
     }
 
     // close param file
@@ -537,7 +536,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
     if (NULL == file_par) 
     {
         printf("Error: Cannot open param file %s!\n", input_param.c_str());
-        exit(1);
+        exit(-1);
     }
 
     // 1-4 scaling factors
@@ -630,7 +629,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported vdW type: %d in line:\n%s\n", 
                        funct, line );
-                exit(1);
+                exit(-1);
             }
         }
     }
@@ -723,7 +722,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported bond function type: %d in line:\n%s\n", 
                        funct, line );
-                exit(1);
+                exit(-1);
             }
 
             // update exclusion
@@ -770,7 +769,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported pair function type: %d in line:\n%s\n", 
                         funct, line);
-                exit(1);
+                exit(-1);
             }
 
             // update exclusion
@@ -820,7 +819,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported angle function type: %d in line:\n%s\n", 
                         funct, line);
-                exit(1);
+                exit(-1);
             }
 
             // update exclusion
@@ -880,7 +879,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported dihedral function type: %d in line:\n%s\n", 
                        funct, line);
-                exit(1);
+                exit(-1);
             }
 
             // update exclusion
@@ -936,7 +935,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
             {
                 printf("Error: unsupported virtual_sites function type: %d in line:\n%s\n", 
                        funct, line);
-                exit(1);
+                exit(-1);
             }
         }
 
@@ -1033,7 +1032,7 @@ void assign_indices(Topol& s_topol, Metal& s_metal,
         printf("Error: Incorrect number of atoms or molecules in the system! (1st)\n");
         printf("n_atoms = %d, i = %d\n", s_topol.n_atoms, i);
         printf("n_mols = %d, im = %d\n", s_topol.n_mols, im);
-        exit(1);
+        exit(-1);
     }
 
 

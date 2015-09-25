@@ -51,6 +51,13 @@ int main(int argc, char *argv[])
     // tag for MPI message: energy minimization convergence 
     const int tag_99 = 99;
 
+    
+    // initialize timer
+    time_t start_t = time(NULL);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    double start_time = (tv.tv_sec) + (tv.tv_usec) * 1.0e-6;
+    
 
     //============ get input files =============
 
@@ -89,6 +96,27 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (ROOT_PROC == my_id) {
+        printf("\n");
+        printf("              +-----------------------------------------------------+\n");
+        printf("              |            CapacMD program version 1.0.2            |\n");
+        printf("              |         Xin Li, TheoChemBio, KTH, Stockholm         |\n");
+        printf("              +-----------------------------------------------------+\n");
+        printf("\n");
+        
+        printf("              .------------------ reference paper ------------------.\n");
+        printf("\n");
+        printf("    Molecular Dynamics Simulations using a Capacitance-Polarizability Force Field,\n");
+        printf("    Xin Li and Hans Agren, J. Phys. Chem. C, 2015, 119, 19430-19437.\n");
+        printf("    http://pubs.acs.org/doi/abs/10.1021/acs.jpcc.5b04347\n");
+        printf("\n");
+        printf("\n");
+        
+        printf("    Job started at %s", ctime(&start_t));
+        printf("    Parallelized via MPI, number of processors = %d\n", num_procs);
+        printf("\n");
+        printf("\n");
+    }
 
     //========= define variables and read MD settings ===========
 
@@ -97,14 +125,8 @@ int main(int argc, char *argv[])
     Metal  s_metal;
     
     // read md settings from input_mdset
-    read_settings(input_mdset, s_runset, s_metal);
+    read_settings(input_mdset, s_runset, s_metal, my_id);
 
-    
-    // initialize timer
-    time_t start_t = time(NULL);
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    double start_time = (tv.tv_sec) + (tv.tv_usec) * 1.0e-6;
 
     // time_used[0] = total
     // time_used[1] = QSC density
@@ -143,7 +165,7 @@ int main(int argc, char *argv[])
     else 
     { 
         printf("Error: unknown coulomb_type %s!\n", s_runset.coulomb_type.c_str());
-        exit(1); 
+        exit(-1); 
     }
 
 
@@ -182,7 +204,7 @@ int main(int argc, char *argv[])
     else 
     { 
         printf("Error: unknown vdw_type %s!\n", s_runset.vdw_type.c_str());
-        exit(1); 
+        exit(-1); 
     }
 
 
@@ -324,26 +346,6 @@ int main(int argc, char *argv[])
 
     if (ROOT_PROC == my_id)
     {
-        printf("\n");
-        printf("              +-----------------------------------------------------+\n");
-        printf("              |            CapacMD program version 1.0.2            |\n");
-        printf("              |         Xin Li, TheoChemBio, KTH, Stockholm         |\n");
-        printf("              +-----------------------------------------------------+\n");
-        printf("\n");
-
-        printf("              .------------------ reference paper ------------------.\n");
-        printf("\n");
-        printf("    Molecular Dynamics Simulations using a Capacitance-Polarizability Force Field,\n");
-        printf("    Xin Li and Hans Agren, J. Phys. Chem. C, 2015, 119, 19430-19437.\n");
-        printf("    http://pubs.acs.org/doi/abs/10.1021/acs.jpcc.5b04347\n");
-        printf("\n");
-        printf("\n");
-
-        printf("    Job started at %s", ctime(&start_t));
-        printf("    Parallelized via MPI, number of processors = %d\n", num_procs);
-        printf("\n");
-        printf("\n");
-
         printf("              .------------------ run parameters -------------------.\n");
         printf("\n");
         printf("    run_type = %s, ensemble = %s, ",
@@ -509,7 +511,7 @@ int main(int argc, char *argv[])
     {
        printf("Error: groNAtoms(%d) not equal to nAtoms(%d)!\n", 
               groNAtoms, nAtoms);
-       exit(1);
+       exit(-1);
     }
 
     // half of box length for PBC
@@ -624,7 +626,7 @@ int main(int argc, char *argv[])
         if (NULL == file_gro) 
         {
             printf( "Cannot write to traj.gro!\n" ) ;
-            exit(1);
+            exit(-1);
         }
 
         // creat vec_pq.txt for writing
@@ -632,7 +634,7 @@ int main(int argc, char *argv[])
         if (NULL == file_pq) 
         {
             printf( "Cannot write to vec_pq.txt!\n" ) ;
-            exit(1);
+            exit(-1);
         }
 
         // creat traj.dat for writing
@@ -640,7 +642,7 @@ int main(int argc, char *argv[])
         if (NULL == file_dat) 
         {
             printf( "Cannot write to traj.dat!\n" ) ;
-            exit(1);
+            exit(-1);
         }
 
         // get maximal force

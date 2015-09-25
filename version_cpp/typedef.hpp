@@ -1,5 +1,5 @@
 /**
- \file typedef.h
+ \file typedef.hpp
  \author Xin Li
  \date 2015/09
  \version 1.0.2
