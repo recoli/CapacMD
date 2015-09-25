@@ -25,18 +25,14 @@
 
 #include <mpi.h>
 #include <sys/time.h>
+#include <string>
 
 #include <cmath>
 #include <cstdio>
-#include <cstring>
 #include <cstdlib>
 #include <cassert>
 
-#include <string>
-
 #include "typedef.hpp"
-#include "my_malloc.hpp"
-
 #include "file.hpp"
 #include "force.hpp"
 #include "thermostat.hpp"
@@ -107,7 +103,7 @@ int main(int argc, char *argv[])
     // initialize timer
     time_t start_t = time(NULL);
     struct timeval tv;
-	gettimeofday(&tv, NULL);
+    gettimeofday(&tv, NULL);
     double start_time = (tv.tv_sec) + (tv.tv_usec) * 1.0e-6;
 
     // time_used[0] = total
@@ -258,6 +254,8 @@ int main(int argc, char *argv[])
 
     // bonded potentials: bond, pair, angle, dihedral
     int *data_bonded = new (std::nothrow) int [s_topol.mol_types * 6];
+    assert(data_bonded != nullptr);
+    
     s_topol.n_bonds       = &(data_bonded[0]);
     s_topol.n_pairs       = &(data_bonded[s_topol.mol_types]);
     s_topol.n_angles      = &(data_bonded[s_topol.mol_types * 2]);
@@ -341,25 +339,25 @@ int main(int argc, char *argv[])
         printf("\n");
         printf("\n");
 
-        printf("    Calculation started at %s", ctime(&start_t));
+        printf("    Job started at %s", ctime(&start_t));
         printf("    Parallelized via MPI, number of processors = %d\n", num_procs);
         printf("\n");
         printf("\n");
 
         printf("              .------------------ run parameters -------------------.\n");
         printf("\n");
-        printf("    run_type = %s, ensemble = %s\n", s_runset.run_type, s_runset.ensemble);
-        printf("    vdw_type = %s, coulomb_type = %s\n",
+        printf("    run_type = %s, ensemble = %s, ",
+               s_runset.run_type.c_str(), s_runset.ensemble.c_str());
+        printf("vdw_type = %s, coulomb_type = %s,\n",
                s_runset.vdw_type.c_str(), s_runset.coulomb_type.c_str());
 
         printf("    rCut = %.3f nm, ", rCut);
         if (1 == s_runset.use_coulomb)
         {
-            printf("alpha = %.3f nm^-1", s_runset.w_alpha);
+            printf("alpha = %.3f nm^-1, ", s_runset.w_alpha);
         }
-        printf("\n");
 
-        printf("    ref_T = %.1f K\n", s_runset.ref_temp);
+        printf("ref_T = %.1f K\n", s_runset.ref_temp);
         printf("\n");
         printf("\n");
 
@@ -401,14 +399,13 @@ int main(int argc, char *argv[])
     find_start_end(s_task.start_atom,  s_task.end_atom,  nAtoms,      num_procs);
     find_start_end(s_task.start_metal, s_task.end_metal, s_metal.num, num_procs);
 
-    /// \todo will implement overloading function for find_start_end
     long int *data_long_start_end = new (std::nothrow) long int [num_procs * 2];
     assert(data_long_start_end != nullptr);
     s_task.start_pair = &(data_long_start_end[0]);
     s_task.end_pair   = &(data_long_start_end[num_procs]);
 
     long int n_pairs = nAtoms * (nAtoms - 1) / 2;
-    find_start_end_long(s_task.start_pair,  s_task.end_pair,  n_pairs, num_procs);
+    find_start_end(s_task.start_pair,  s_task.end_pair,  n_pairs, num_procs);
 
 
     //============= assign indices, masses and charges =======================
@@ -458,27 +455,6 @@ int main(int argc, char *argv[])
     s_system.old_potential = 0.0;
 
 
-    /// \todo will put virial and partial_vir on stack
-    // virial tensor
-    s_system.virial      = (double **)my_malloc(DIM * sizeof(double*));
-    s_system.partial_vir = (double **)my_malloc(DIM * sizeof(double*));
-
-    double *data_vir = (double *)my_malloc(DIM*2 * DIM * sizeof(double));
-    for (int i = 0; i < DIM; ++ i)
-    {
-        s_system.virial[i]      = &(data_vir[DIM * i]);
-        s_system.partial_vir[i] = &(data_vir[DIM * (DIM + i)]);
-    }
-
-    /// \todo will put box size on stack
-    // box size
-    // Note: for now we treat rectangular box only.
-    // "s_system.box" has six elements
-    // the first three are length in x, y, z
-    // the second three are half of the length in x, y, z
-    s_system.box = (double *)my_malloc(sizeof(double) * DIM*2);
-
-
     // coordinates, velocities and forces
     double *data_rvf = new (std::nothrow) double [nAtoms * DIM * 7];
     assert(data_rvf != nullptr);
@@ -518,13 +494,8 @@ int main(int argc, char *argv[])
 
     //================ read input gro file ==================
     
-    /// \todo will introduce macro constant N_NHC 10
     // vQ and vP are "velocities" of the thermostat/barostat particles
-    s_system.num_nhc = 10; // number of NH-chains hard-coded as 10
-    s_system.vQ = (double *)my_malloc(sizeof(double) * s_system.num_nhc);
-    s_system.aQ = (double *)my_malloc(sizeof(double) * s_system.num_nhc);
-    int i_nhc;
-    for (i_nhc = 0; i_nhc < s_system.num_nhc; ++ i_nhc)
+    for (int i_nhc = 0; i_nhc < s_system.num_nhc; ++ i_nhc)
     {
         s_system.vQ[i_nhc] = 0.0;
         s_system.aQ[i_nhc] = 0.0;
@@ -558,7 +529,7 @@ int main(int argc, char *argv[])
     // temperature coupling; kT = kB*T, in kJ mol^-1
     s_runset.kT    = K_BOLTZ * s_runset.ref_temp;
     s_system.qMass = (double)s_system.ndf * s_runset.kT *
-                      s_runset.tau_temp * s_runset.tau_temp;
+                     s_runset.tau_temp * s_runset.tau_temp;
     //s_system.pMass = (double)s_system.ndf * s_runset.kT * s_runset.tau_pres * s_runset.tau_pres;
 
     // temperature control
@@ -601,28 +572,27 @@ int main(int argc, char *argv[])
     //=================== vectors for the BiCGSTAB solver =========================
 
     double* data_bicgstab = new (std::nothrow) double [n_mat * 11];
-    /// \todo will call bicgstab by reference in functions Bicgstab& s_bicgstab
-    Bicgstab  *p_bicgstab = new (std::nothrow) Bicgstab;
     assert(data_bicgstab != nullptr);
-    assert(p_bicgstab != nullptr);
+    
+    Bicgstab s_bicgstab;
 
-    p_bicgstab->Ax = &(data_bicgstab[0]);
-    p_bicgstab->r0 = &(data_bicgstab[n_mat]);
-    p_bicgstab->r  = &(data_bicgstab[n_mat * 2]);
-    p_bicgstab->p  = &(data_bicgstab[n_mat * 3]);
-    p_bicgstab->v  = &(data_bicgstab[n_mat * 4]);
-    p_bicgstab->s  = &(data_bicgstab[n_mat * 5]);
-    p_bicgstab->t  = &(data_bicgstab[n_mat * 6]);
-    p_bicgstab->y  = &(data_bicgstab[n_mat * 7]);
-    p_bicgstab->z  = &(data_bicgstab[n_mat * 8]);
-    p_bicgstab->Kt = &(data_bicgstab[n_mat * 9]);
-    p_bicgstab->K  = &(data_bicgstab[n_mat * 10]);
+    s_bicgstab.Ax = &(data_bicgstab[0]);
+    s_bicgstab.r0 = &(data_bicgstab[n_mat]);
+    s_bicgstab.r  = &(data_bicgstab[n_mat * 2]);
+    s_bicgstab.p  = &(data_bicgstab[n_mat * 3]);
+    s_bicgstab.v  = &(data_bicgstab[n_mat * 4]);
+    s_bicgstab.s  = &(data_bicgstab[n_mat * 5]);
+    s_bicgstab.t  = &(data_bicgstab[n_mat * 6]);
+    s_bicgstab.y  = &(data_bicgstab[n_mat * 7]);
+    s_bicgstab.z  = &(data_bicgstab[n_mat * 8]);
+    s_bicgstab.Kt = &(data_bicgstab[n_mat * 9]);
+    s_bicgstab.K  = &(data_bicgstab[n_mat * 10]);
 
 
     //================== compute forces ==========================
 
     mpi_force(s_task, s_topol, atom_info, mol_info,
-              s_runset, s_metal, s_system, p_bicgstab,
+              s_runset, s_metal, s_system, s_bicgstab,
               my_id, num_procs, time_used);
 
 
@@ -690,17 +660,16 @@ int main(int argc, char *argv[])
         printf("\n");
 
         // check s_runset.run_type
-        if (0 == strcmp(s_runset.run_type, "em") || 
-            0 == strcmp(s_runset.run_type, "cg"))
+        if (std::string("em") == s_runset.run_type ||
+            std::string("cg") == s_runset.run_type)
         {
             printf("    Step %-5d Fmax=%10.3e  E=%15.8e\n", 
                     0, s_system.f_max, s_system.potential[0]);
         }
-        else if (0 == strcmp(s_runset.run_type, "md"))
+        else if (std::string("md") == s_runset.run_type)
         {
             printf("  %10.3f  Fmax=%.2e  E=%.6e  T=%.3e\n", 
-                   0.0, s_system.f_max, s_system.potential[0], 
-                   s_system.inst_temp);
+                   0.0, s_system.f_max, s_system.potential[0], s_system.inst_temp);
         }
     }
 
@@ -713,8 +682,8 @@ int main(int argc, char *argv[])
     // Energy minimization using steepest descent or CG
     //===================================================
 
-    if (0 == strcmp(s_runset.run_type, "em") || 
-        0 == strcmp(s_runset.run_type, "cg"))
+    if (std::string("em") == s_runset.run_type ||
+        std::string("cg") == s_runset.run_type)
     {
         s_system.vQ[0] = 0.0;
         s_system.vP = 0.0;
@@ -776,7 +745,7 @@ int main(int argc, char *argv[])
 
             // update forces
             mpi_force(s_task, s_topol, atom_info, mol_info,
-                      s_runset, s_metal, s_system, p_bicgstab,
+                      s_runset, s_metal, s_system, s_bicgstab,
                       my_id, num_procs, time_used);
 
             if (ROOT_PROC == my_id) 
@@ -829,7 +798,7 @@ int main(int argc, char *argv[])
                 {
                     // update gamma for CG optimization
                     // for steep descent, gamma = 0.0
-                    if (0 == strcmp(s_runset.run_type, "cg"))
+                    if (std::string("cg") == s_runset.run_type)
                     {
                         double g22 = 0.0;
                         double g12 = 0.0;
@@ -883,7 +852,7 @@ int main(int argc, char *argv[])
     // MD with nvt ensemble
     //===============================
 
-    else if (0 == strcmp(s_runset.run_type, "md"))
+    else if (std::string("md") == s_runset.run_type)
     {
         for (step = 1; step <= s_runset.nSteps; ++ step) 
         {
@@ -906,7 +875,7 @@ int main(int argc, char *argv[])
                 s_runset.kT = K_BOLTZ * s_runset.ref_temp;
             
                 // thermostat for 1st half step
-                if (0 == strcmp(s_runset.ensemble, "nvt"))
+                if (std::string("nvt") == s_runset.ensemble)
                 {
                     nose_hoover_chain(s_runset, s_system, nAtoms);
                 }
@@ -953,7 +922,7 @@ int main(int argc, char *argv[])
 
             // compute forces
             mpi_force(s_task, s_topol, atom_info, mol_info,
-                      s_runset, s_metal, s_system, p_bicgstab,
+                      s_runset, s_metal, s_system, s_bicgstab,
                       my_id, num_procs, time_used);
             
 
@@ -987,7 +956,7 @@ int main(int argc, char *argv[])
 
 
                 // thermostat for 2nd half step
-                if (0 == strcmp(s_runset.ensemble, "nvt"))
+                if (std::string("nvt") == s_runset.ensemble)
                 {
                     nose_hoover_chain(s_runset, s_system, nAtoms);
                 }
@@ -1056,11 +1025,11 @@ int main(int argc, char *argv[])
         print_potential(s_system.potential);
 
         time_t end_t = time(NULL);
-		gettimeofday(&tv, NULL);
+        gettimeofday(&tv, NULL);
         double end_time = (tv.tv_sec) + (tv.tv_usec) * 1.0e-6;
 
-        printf("    Calculation ended normally at %s", ctime(&end_t));
-        printf("    %.3f seconds were used\n", end_time - start_time );
+        printf("    Job ended normally at %s", ctime(&end_t));
+        printf("    %.2f seconds were used\n", end_time - start_time );
         printf("\n");
         printf("\n");
 
@@ -1078,76 +1047,60 @@ int main(int argc, char *argv[])
     }
     delete[] time_used;
 
-    delete[] s_metal.cpff_chg;
-    delete[] s_metal.start_NP;
-    delete[] s_metal.end_NP;
-
-    delete[] data_bonded;
-
     for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
+        delete[] s_topol.bond_param[mol];
+        delete[] s_topol.pair_param[mol];
+        delete[] s_topol.angle_param[mol];
+        delete[] s_topol.dihedral_param[mol];
+
+        delete[] s_topol.vsite_funct[mol];
+        delete[] s_topol.vsite_4[mol];
+        delete[] s_topol.constraint[mol];
+        
         for (int atom_i = 0; atom_i < s_topol.atom_num[mol]; ++ atom_i)
         {
-            free(s_topol.exclude[mol][atom_i]);
+            delete[] s_topol.exclude[mol][atom_i];
         }
-
-        free(s_topol.exclude[mol]);
-
-        free(s_topol.bond_param[mol]);
-        free(s_topol.pair_param[mol]);
-        free(s_topol.angle_param[mol]);
-        free(s_topol.dihedral_param[mol]);
-
-        free(s_topol.vsite_4[mol]);
-        free(s_topol.vsite_funct[mol]);
-
-        free(s_topol.constraint[mol]);
+        delete[] s_topol.exclude[mol];
+        
+        delete[] s_topol.atom_param[mol];
     }
-
-    delete[] s_topol.exclude;
-    delete[] s_topol.vsite_funct;
 
     delete[] s_topol.bond_param;
     delete[] s_topol.pair_param;
     delete[] s_topol.angle_param;
     delete[] s_topol.dihedral_param;
+    
+    delete[] s_topol.vsite_funct;
     delete[] s_topol.vsite_4;
     delete[] s_topol.constraint;
+    delete[] s_topol.exclude;
 
     delete[] s_topol.mol_num;
     delete[] s_topol.atom_num;
-    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
-    {
-        free(s_topol.atom_param[mol]);
-    }
     delete[] s_topol.atom_param;
+    delete[] s_topol.nonbonded_param;
 
     if (s_metal.min >=0 && s_metal.max >= s_metal.min)
     {
         delete[] s_metal.inv_sqrt_dens;
         delete[] data_relay;
     }
-
+    delete[] s_metal.cpff_chg;
+    delete[] s_metal.start_NP;
+    delete[] s_metal.end_NP;
+    
+    delete[] data_bonded;
+    delete[] data_nonbonded;
     delete[] data_bicgstab;
-
     delete[] data_start_end;
     delete[] data_long_start_end;
-
+    delete[] data_potential;
+    delete[] data_rvf;
+    
     delete[] atom_info;
     delete[] mol_info;
-
-    delete[] data_potential;
-
-    free(s_system.virial);
-    free(s_system.partial_vir);
-    free(data_vir);
-
-    free(s_system.box);
-
-    delete[] data_rvf;
-
-    delete[] s_topol.nonbonded_param;
-    delete[] data_nonbonded;
 
     MPI::Finalize();
 

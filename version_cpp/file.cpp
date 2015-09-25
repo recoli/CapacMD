@@ -26,11 +26,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 
 #include <string>
 
 #include "typedef.hpp"
-#include "my_malloc.hpp"
 
 /// \brief substr in C
 void substr(char *dest, const char *src, unsigned int start, unsigned int cnt) 
@@ -64,7 +64,8 @@ void read_next_line(FILE *file_par, char *line, char *subline)
 void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal)
 {
     FILE* f_set;
-    char line[MAX_STR_LEN], option[MAX_STR_LEN], value[MAX_STR_LEN];
+    char c_str_line[MAX_STR_LEN], c_str_option[MAX_STR_LEN], c_str_value[MAX_STR_LEN];
+    std::string option, value;
 
     f_set = fopen(input_mdset.c_str(), "r") ;
     if (NULL == f_set)
@@ -73,47 +74,50 @@ void read_settings(std::string input_mdset, RunSet& s_runset, Metal& s_metal)
         exit(1);
     }
 
-    while (fgets(line, MAX_STR_LEN, f_set) != NULL)
+    while (fgets(c_str_line, MAX_STR_LEN, f_set) != NULL)
     {
-        sscanf(line, "%s%s", option, value);
+        sscanf(c_str_line, "%s%s", c_str_option, c_str_value);
+        option = std::string(c_str_option);
+        value  = std::string(c_str_value);
 
-        if      (0 == strcmp(option, "run_type")) { strcpy(s_runset.run_type, value); }
-        else if (0 == strcmp(option, "ensemble")) { strcpy(s_runset.ensemble, value); }
+        if      (std::string("run_type") == option) { s_runset.run_type = value; }
+        else if (std::string("ensemble") == option) { s_runset.ensemble = value; }
 
-        else if (0 == strcmp(option, "em_steps"       )) { s_runset.em_steps  = atoi(value); }
-        else if (0 == strcmp(option, "em_length_in_nm")) { s_runset.em_length = atof(value); }
-        else if (0 == strcmp(option, "em_tolerance"   )) { s_runset.em_tol    = atof(value); }
+        else if (std::string("em_steps"       ) == option) { s_runset.em_steps  = std::stoi(value); }
+        else if (std::string("em_length_in_nm") == option) { s_runset.em_length = std::stod(value); }
+        else if (std::string("em_tolerance"   ) == option) { s_runset.em_tol    = std::stod(value); }
 
-        else if (0 == strcmp(option, "number_of_steps")) { s_runset.nSteps = atoi(value); }
-        else if (0 == strcmp(option, "time_step_in_ps")) { s_runset.dt     = atof(value); }
-        else if (0 == strcmp(option, "save_step"      )) { s_runset.nSave  = atoi(value); }
+        else if (std::string("number_of_steps") == option) { s_runset.nSteps = std::stoi(value); }
+        else if (std::string("time_step_in_ps") == option) { s_runset.dt     = std::stod(value); }
+        else if (std::string("save_step"      ) == option) { s_runset.nSave  = std::stoi(value); }
 
-        else if (0 == strcmp(option, "vdw_type"    )) { s_runset.vdw_type = std::string(value); }
-        else if (0 == strcmp(option, "coulomb_type")) { s_runset.coulomb_type = std::string(value); }
+        else if (std::string("vdw_type")     == option) { s_runset.vdw_type     = value; }
+        else if (std::string("coulomb_type") == option) { s_runset.coulomb_type = value; }
 
-        else if (0 == strcmp(option, "cut_off_radius")) { s_runset.rCut    = atof(value); }
-        else if (0 == strcmp(option, "coulomb_alpha" )) { s_runset.w_alpha = atof(value); }
+        else if (std::string("cut_off_radius") == option) { s_runset.rCut    = std::stod(value); }
+        else if (std::string("coulomb_alpha" ) == option) { s_runset.w_alpha = std::stod(value); }
 
-        else if (0 == strcmp(option, "heating_steps")) { s_runset.nHeating = atoi(value); }
-        else if (0 == strcmp(option, "ref_T_in_K"   )) { s_runset.ref_temp = atof(value); }
-        else if (0 == strcmp(option, "tau_T_in_ps"  )) { s_runset.tau_temp = atof(value); }
+        else if (std::string("heating_steps") == option) { s_runset.nHeating = std::stoi(value); }
+        else if (std::string("ref_T_in_K"   ) == option) { s_runset.ref_temp = std::stod(value); }
+        else if (std::string("tau_T_in_ps"  ) == option) { s_runset.tau_temp = std::stod(value); }
 
         /*
-        else if (0 == strcmp(option, "ref_P_in_bar")) { s_runset.ref_pres = atof(value); }
-        else if (0 == strcmp(option, "tau_P_in_ps" )) { s_runset.tau_pres = atof(value); }
+        else if (std::string("ref_P_in_bar") == option) { s_runset.ref_pres = std::stoi(value); }
+        else if (std::string("tau_P_in_ps" ) == option) { s_runset.tau_pres = std::stoi(value); }
         */
 
-        else if (0 == strcmp(option, "fix_metal")) { s_metal.fix_pos  = atoi(value); }
-        else if (0 == strcmp(option, "use_cpff" )) { s_metal.use_cpff = atoi(value); }
+        else if (std::string("fix_metal") == option) { s_metal.fix_pos  = std::stoi(value); }
+        else if (std::string("use_cpff" ) == option) { s_metal.use_cpff = std::stoi(value); }
 
         // input external electric field in V/nm, or eV/(e nm)
         // converting to MD units kJ/mol/(e nm)
-        else if (0 == strcmp(option, "external_Ex")) { s_runset.external_efield[0] = atof(value) * EV2KJMOL; }
-        else if (0 == strcmp(option, "external_Ey")) { s_runset.external_efield[1] = atof(value) * EV2KJMOL; }
-        else if (0 == strcmp(option, "external_Ez")) { s_runset.external_efield[2] = atof(value) * EV2KJMOL; }
+        else if (std::string("external_Ex") == option) { s_runset.external_efield[0] = std::stod(value) * EV2KJMOL; }
+        else if (std::string("external_Ey") == option) { s_runset.external_efield[1] = std::stod(value) * EV2KJMOL; }
+        else if (std::string("external_Ez") == option) { s_runset.external_efield[2] = std::stod(value) * EV2KJMOL; }
 
-        else if (0 == strcmp(option, "")) { continue; }
-        else    { printf("Warning: unkonwn option %s in %s\n", option, input_mdset.c_str()); }
+        else if (std::string("") == option) { continue; }
+        else    { printf("Warning: unkonwn option %s in %s\n",
+                         option.c_str(), input_mdset.c_str()); }
     }
 
     fclose(f_set);
@@ -141,7 +145,7 @@ void read_gro(std::string input_gro, System& s_system,
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
     {
         sscanf(line, "%s%d%s%lf%s%lf", 
-                subline, &step, sub_2, &s_system.vQ[0], sub_3, &s_system.vP);
+               subline, &step, sub_2, &s_system.vQ[0], sub_3, &s_system.vP);
     }
 
     // read the second line for number of atoms
@@ -180,8 +184,7 @@ void read_gro(std::string input_gro, System& s_system,
     // box size
     if (fgets(line, MAX_STR_LEN, gro) != NULL)
     {
-        sscanf(line, "%lf%lf%lf", 
-                &s_system.box[0], &s_system.box[1], &s_system.box[2]);
+        sscanf(line, "%lf%lf%lf", &s_system.box[0], &s_system.box[1], &s_system.box[2]);
     }
 
     fclose(gro);
@@ -194,8 +197,7 @@ void write_gro(FILE *file_gro, System& s_system,
     fprintf(file_gro, "step  %d  vQ  %lf  vP  %lf\n", step, s_system.vQ[0], s_system.vP);
     fprintf(file_gro, "%5d\n", nAtoms);
 
-    int i;
-    for (i = 0; i < nAtoms; ++ i) 
+    for (int i = 0; i < nAtoms; ++ i)
     {
         fprintf(file_gro, "%5d%-5s%5s%5d%10.5f%10.5f%10.5f%10.6f%10.6f%10.6f\n", 
                 atom_info[i].resID, atom_info[i].resName, atom_info[i].atomName, i+1,
@@ -214,9 +216,8 @@ void write_vec_pq(FILE *file_pq, Metal& s_metal, int step)
     fprintf(file_pq, "step %d", step);
 
     // print Lagrange multipliers
-    int iNP;
     fprintf(file_pq, "  lambda");
-    for (iNP = 0; iNP < s_metal.n_NPs; ++ iNP)
+    for (int iNP = 0; iNP < s_metal.n_NPs; ++ iNP)
     {
         fprintf(file_pq, " %.10f", s_metal.vec_pq[n_metal*4 + iNP]);
     }
@@ -225,8 +226,7 @@ void write_vec_pq(FILE *file_pq, Metal& s_metal, int step)
     // print number of metal atoms, dipole vectors and charges
     fprintf(file_pq, "%5d\n", n_metal);
 
-    int i;
-    for (i = 0; i < n_metal; ++ i)
+    for (int i = 0; i < n_metal; ++ i)
     {
         fprintf(file_pq, "%15.8f%15.8f%15.8f%15.8f\n", 
                 s_metal.vec_pq[i*3], s_metal.vec_pq[i*3+1], s_metal.vec_pq[i*3+2], 
@@ -241,7 +241,7 @@ void write_binary(FILE *file_dat, System& s_system, int nAtoms, int step)
     fwrite(&nAtoms, sizeof(int), 1, file_dat);
     fwrite(&step,   sizeof(int), 1, file_dat);
 
-    fwrite(s_system.box, sizeof(double),      3, file_dat);
+    fwrite(s_system.box, sizeof(double),    DIM, file_dat);
     fwrite(s_system.rx,  sizeof(double), nAtoms, file_dat);
     fwrite(s_system.ry,  sizeof(double), nAtoms, file_dat);
     fwrite(s_system.rz,  sizeof(double), nAtoms, file_dat);
@@ -547,8 +547,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
     read_next_line(file_par, line, tmp);
 
     // s_topol.mol_num = number of this type of molecule in the system
-    int mol;
-    for (mol = 0; mol < s_topol.mol_types; ++ mol) 
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.mol_num[mol]);
@@ -556,14 +555,15 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
 
     // s_topol.atom_num = number of atoms in this type of molecule
     // s_topol.atom_param = atomic parameters (q, m, sig, eps, type)
-    for (mol = 0; mol < s_topol.mol_types; ++ mol) 
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.atom_num[mol]);
 
-        s_topol.atom_param[mol] = (AtomParam *)my_malloc(s_topol.atom_num[mol] * sizeof(AtomParam));
-        int atom;
-        for (atom = 0; atom < s_topol.atom_num[mol]; ++ atom) 
+        s_topol.atom_param[mol] = new (std::nothrow) AtomParam [s_topol.atom_num[mol]];
+        assert(s_topol.atom_param[mol] != nullptr);
+        
+        for (int atom = 0; atom < s_topol.atom_num[mol]; ++ atom)
         {
             read_next_line(file_par, line, tmp);
             sscanf(line, "%lf%lf%d",
@@ -657,17 +657,21 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
     }
 
     // bonded potentials: bond, pair, angle, dihedral
-    for (mol = 0; mol < s_topol.mol_types; ++ mol)
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
         int atom_i, atom_j, atom_k, atom_l, atom_s;
         int iBond, iPair, iAngle, iDihedral, iVSite, iCstr;
         int funct;
 
         // exclusions
-        s_topol.exclude[mol] = (int **)my_malloc(s_topol.atom_num[mol] * sizeof(int *));
+        s_topol.exclude[mol] = new (std::nothrow) int* [s_topol.atom_num[mol]];
+        assert(s_topol.exclude[mol] != nullptr);
+        
         for (atom_i = 0; atom_i < s_topol.atom_num[mol]; ++ atom_i) 
         {
-            s_topol.exclude[mol][atom_i] = (int *)my_malloc(s_topol.atom_num[mol] * sizeof(int));
+            s_topol.exclude[mol][atom_i] = new (std::nothrow) int [s_topol.atom_num[mol]];
+            assert(s_topol.exclude[mol][atom_i] != nullptr);
+            
             for (atom_j = 0; atom_j < s_topol.atom_num[mol]; ++ atom_j) 
             {
                 s_topol.exclude[mol][atom_i][atom_j] = 0;
@@ -678,7 +682,8 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_bonds[mol]);
 
-        s_topol.bond_param[mol] = (BondParam *)my_malloc(s_topol.n_bonds[mol] * sizeof(BondParam));
+        s_topol.bond_param[mol] = new (std::nothrow) BondParam [s_topol.n_bonds[mol]];
+        assert(s_topol.bond_param[mol] != nullptr);
 
         for (iBond = 0; iBond < s_topol.n_bonds[mol]; ++ iBond)
         {
@@ -730,7 +735,8 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_pairs[mol]);
 
-        s_topol.pair_param[mol] = (PairParam *)my_malloc(s_topol.n_pairs[mol] * sizeof(PairParam));
+        s_topol.pair_param[mol] = new (std::nothrow) PairParam [s_topol.n_pairs[mol]];
+        assert(s_topol.pair_param[mol] != nullptr);
 
         for (iPair = 0; iPair < s_topol.n_pairs[mol]; ++ iPair)
         {
@@ -776,7 +782,8 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_angles[mol]);
 
-        s_topol.angle_param[mol] = (AngleParam *)my_malloc(s_topol.n_angles[mol] * sizeof(AngleParam));
+        s_topol.angle_param[mol] = new (std::nothrow) AngleParam [s_topol.n_angles[mol]];
+        assert(s_topol.angle_param[mol] != nullptr);
 
         for (iAngle = 0; iAngle < s_topol.n_angles[mol]; ++ iAngle)
         {
@@ -829,8 +836,10 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_dihedrals[mol]);
 
-        s_topol.dihedral_param[mol] = (DihedralParam *)my_malloc(s_topol.n_dihedrals[mol] * sizeof(DihedralParam));
-
+        s_topol.dihedral_param[mol] = new (std::nothrow) DihedralParam
+                                      [s_topol.n_dihedrals[mol]];
+        assert(s_topol.dihedral_param[mol] != nullptr);
+        
         for (iDihedral = 0; iDihedral < s_topol.n_dihedrals[mol]; ++ iDihedral)
         {
             read_next_line(file_par, line, tmp);
@@ -894,8 +903,10 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_vsites[mol]);
 
-        s_topol.vsite_4[mol] = (VSite_4 *)my_malloc(s_topol.n_vsites[mol] * sizeof(VSite_4));
-        s_topol.vsite_funct[mol] = (int *)my_malloc(s_topol.n_vsites[mol] * sizeof(int));
+        s_topol.vsite_4[mol] = new (std::nothrow) VSite_4 [s_topol.n_vsites[mol]];
+        s_topol.vsite_funct[mol] = new (std::nothrow) int [s_topol.n_vsites[mol]];
+        assert(s_topol.vsite_4[mol] != nullptr);
+        assert(s_topol.vsite_funct[mol] != nullptr);
 
         for (iVSite = 0; iVSite < s_topol.n_vsites[mol]; ++ iVSite)
         {
@@ -934,7 +945,8 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
         read_next_line(file_par, line, tmp);
         sscanf(line, "%s%d", tmp, &s_topol.n_constraints[mol]);
 
-        s_topol.constraint[mol] = (Constraint *)my_malloc(s_topol.n_constraints[mol] * sizeof(Constraint));
+        s_topol.constraint[mol] = new (std::nothrow) Constraint [s_topol.n_constraints[mol]];
+        assert(s_topol.constraint[mol] != nullptr);
 
         for (iCstr = 0; iCstr < s_topol.n_constraints[mol]; ++ iCstr)
         {
@@ -975,7 +987,7 @@ void read_param_2(std::string input_param, Topol& s_topol, Metal& s_metal)
     // calculate total number of atoms and molecules
     s_topol.n_atoms = 0;
     s_topol.n_mols  = 0;
-    for (mol = 0; mol < s_topol.mol_types; ++ mol) 
+    for (int mol = 0; mol < s_topol.mol_types; ++ mol)
     {
         int num_atom = s_topol.atom_num[mol];
         int num_mol  = s_topol.mol_num[mol];

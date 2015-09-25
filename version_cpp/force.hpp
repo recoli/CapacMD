@@ -43,8 +43,8 @@ void find_start_end(int* start_group, int* end_group,
 // on each processor
 //========================================
 
-void find_start_end_long(long int* start_group, long int* end_group,
-                         const long int total_num, const int num_procs);
+void find_start_end(long int* start_group, long int* end_group,
+                    const long int total_num, const int num_procs);
 
 //=============================
 // sum and analyze time_used
@@ -93,5 +93,5 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 
 void mpi_force(Task& s_task, Topol& s_topol,
                Atom_Info* atom_info, Mol_Info* mol_info, 
-               RunSet& s_runset, Metal& s_metal, System& s_system, Bicgstab *p_bicgstab,
+               RunSet& s_runset, Metal& s_metal, System& s_system, Bicgstab& s_bicgstab,
                int my_id, int num_procs, double** time_used);

@@ -31,7 +31,6 @@
 #include <cstdlib>
 
 #include "typedef.hpp"
-#include "my_malloc.hpp"
 #include "cpff.hpp"
 #include "bicg_stab.hpp"
 
@@ -68,20 +67,20 @@ void scale_vec_2(const double fij, const Vec_R* ptr_rvec, Vec_R* ptr_fvec)
 
 double pbc(double dx, double xbox)
 {
-    if     (dx < -0.5*xbox) {dx += xbox;}
+    if      (dx < -0.5*xbox) {dx += xbox;}
     else if (dx >  0.5*xbox) {dx -= xbox;}
     return dx;
 }
 
 void pbc_12(Vec_R* ptr_r, const double* box)
 {
-    if     (ptr_r->x < -box[3]) { ptr_r->x += box[0]; }
+    if      (ptr_r->x < -box[3]) { ptr_r->x += box[0]; }
     else if (ptr_r->x >  box[3]) { ptr_r->x -= box[0]; }
                                                       
-    if     (ptr_r->y < -box[4]) { ptr_r->y += box[1]; }
+    if      (ptr_r->y < -box[4]) { ptr_r->y += box[1]; }
     else if (ptr_r->y >  box[4]) { ptr_r->y -= box[1]; }
                                                       
-    if     (ptr_r->z < -box[5]) { ptr_r->z += box[2]; }
+    if      (ptr_r->z < -box[5]) { ptr_r->z += box[2]; }
     else if (ptr_r->z >  box[5]) { ptr_r->z -= box[2]; }
 }
 
@@ -90,7 +89,7 @@ void pbc_12(Vec_R* ptr_r, const double* box)
 //==================================
 
 void virial_rvec_fvec_half(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec, 
-                           double** virial)
+                           double virial[DIM][DIM])
 {
     virial[0][0] -= ptr_rvec->x * ptr_fvec->x * 0.5;
     virial[0][1] -= ptr_rvec->x * ptr_fvec->y * 0.5;
@@ -106,7 +105,7 @@ void virial_rvec_fvec_half(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec,
 }
 
 void virial_rvec_fvec_full(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec, 
-                           double** virial)
+                           double virial[DIM][DIM])
 {
     virial[0][0] -= ptr_rvec->x * ptr_fvec->x;
     virial[0][1] -= ptr_rvec->x * ptr_fvec->y;
@@ -128,38 +127,38 @@ void virial_rvec_fvec_full(const Vec_R* ptr_rvec, const Vec_R* ptr_fvec,
 void apply_pbc(const int nMols, const Mol_Info* mol_info, 
                double* rx, double* ry, double* rz, double* box)
 {
+    // the first three elements of box are full box lengths
+    // the last  three elements of box are half box lengths
     double half_box[3];
-    half_box[0] = 0.5 * box[0];
-    half_box[1] = 0.5 * box[1];
-    half_box[2] = 0.5 * box[2];
+    half_box[0] = box[3];
+    half_box[1] = box[4];
+    half_box[2] = box[5];
 
     // loop over molecules
-    int im;
-    for (im = 0; im < nMols; ++ im)
+    for (int im = 0; im < nMols; ++ im)
     {
         // put the center of molecule in the box
         int first_atom = mol_info[im].mini;
         int last_atom  = mol_info[im].maxi;
         const int mid = (first_atom + last_atom) / 2;
 
-        if     (rx[mid] > box[0]) { rx[mid] -= box[0]; }
+        if      (rx[mid] > box[0]) { rx[mid] -= box[0]; }
         else if (rx[mid] < 0.0   ) { rx[mid] += box[0]; }
-        if     (ry[mid] > box[1]) { ry[mid] -= box[1]; }
+        if      (ry[mid] > box[1]) { ry[mid] -= box[1]; }
         else if (ry[mid] < 0.0   ) { ry[mid] += box[1]; }
-        if     (rz[mid] > box[2]) { rz[mid] -= box[2]; }
+        if      (rz[mid] > box[2]) { rz[mid] -= box[2]; }
         else if (rz[mid] < 0.0   ) { rz[mid] += box[2]; }
 
         // apply PBC to other atoms in this molecule
-        int i;
-        for (i = first_atom; i <= last_atom; ++ i)
+        for (int i = first_atom; i <= last_atom; ++ i)
         {
             if (mid == i) { continue; }
 
-            if     (rx[i] - rx[mid] >  half_box[0]) { rx[i] -= box[0]; }
+            if      (rx[i] - rx[mid] >  half_box[0]) { rx[i] -= box[0]; }
             else if (rx[i] - rx[mid] < -half_box[0]) { rx[i] += box[0]; }
-            if     (ry[i] - ry[mid] >  half_box[1]) { ry[i] -= box[1]; }
+            if      (ry[i] - ry[mid] >  half_box[1]) { ry[i] -= box[1]; }
             else if (ry[i] - ry[mid] < -half_box[1]) { ry[i] += box[1]; }
-            if     (rz[i] - rz[mid] >  half_box[2]) { rz[i] -= box[2]; }
+            if      (rz[i] - rz[mid] >  half_box[2]) { rz[i] -= box[2]; }
             else if (rz[i] - rz[mid] < -half_box[2]) { rz[i] += box[2]; }
         }
     }
@@ -196,8 +195,8 @@ void find_start_end(int* start_group, int* end_group,
 // on each processor
 //=======================================
 
-void find_start_end_long(long int* start_group, long int* end_group,
-                         const long int total_num, const int num_procs)
+void find_start_end(long int* start_group, long int* end_group,
+                    const long int total_num, const int num_procs)
 {
     long int avg_num_per_process = total_num / num_procs;
     int residual = total_num % num_procs;
@@ -285,20 +284,20 @@ void analyze_time_used(double** time_used, const int num_procs)
         }
     }
 
-    printf ("    Total time used in force: %.3f seconds  Imb. %.1f%%\n", aver_time[0], imbalance[0]);
-    printf ("    Time used in QSC density: %.3f seconds  Imb. %.1f%%\n", aver_time[1], imbalance[1]);
-    printf ("    Time used in QSC force:   %.3f seconds  Imb. %.1f%%\n", aver_time[2], imbalance[2]);
-    printf ("    Time used in Bonded:      %.3f seconds  Imb. %.1f%%\n", aver_time[3], imbalance[3]);
-    printf ("    Time used in Nonbonded:   %.3f seconds  Imb. %.1f%%\n", aver_time[4], imbalance[4]);
-    printf ("    Time used in Coulomb_LR:  %.3f seconds  Imb. %.1f%%\n", aver_time[9], imbalance[9]);
-    printf ("    Time used in CPIM-matrix: %.3f seconds  Imb. %.1f%%\n", aver_time[5], imbalance[5]);
-    printf ("    Time used in CPIM-vector: %.3f seconds  Imb. %.1f%%\n", aver_time[6], imbalance[6]);
-    printf ("    Time used in CPIM-solve:  %.3f seconds  Imb. %.1f%%\n", aver_time[7], imbalance[7]);
-    printf ("    Time used in CPIM-force:  %.3f seconds  Imb. %.1f%%\n", aver_time[8], imbalance[8]);
+    printf ("    Total time used in force: %.2f seconds  Imb. %.1f%%\n", aver_time[0], imbalance[0]);
+    printf ("    Time used in QSC density: %.2f seconds  Imb. %.1f%%\n", aver_time[1], imbalance[1]);
+    printf ("    Time used in QSC force:   %.2f seconds  Imb. %.1f%%\n", aver_time[2], imbalance[2]);
+    printf ("    Time used in Bonded:      %.2f seconds  Imb. %.1f%%\n", aver_time[3], imbalance[3]);
+    printf ("    Time used in Nonbonded:   %.2f seconds  Imb. %.1f%%\n", aver_time[4], imbalance[4]);
+    printf ("    Time used in Coulomb_LR:  %.2f seconds  Imb. %.1f%%\n", aver_time[9], imbalance[9]);
+    printf ("    Time used in CPIM-matrix: %.2f seconds  Imb. %.1f%%\n", aver_time[5], imbalance[5]);
+    printf ("    Time used in CPIM-vector: %.2f seconds  Imb. %.1f%%\n", aver_time[6], imbalance[6]);
+    printf ("    Time used in CPIM-solve:  %.2f seconds  Imb. %.1f%%\n", aver_time[7], imbalance[7]);
+    printf ("    Time used in CPIM-force:  %.2f seconds  Imb. %.1f%%\n", aver_time[8], imbalance[8]);
     printf ("\n");
-    printf ("    Time used in rx communication:  %.3f seconds  Imb. %.1f%%\n", 
+    printf ("    Time used in rx communication:  %.2f seconds  Imb. %.1f%%\n",
                             aver_time[10], imbalance[10]);
-    printf ("    Time used in fx communication:  %.3f seconds  Imb. %.1f%%\n", 
+    printf ("    Time used in fx communication:  %.2f seconds  Imb. %.1f%%\n", 
                             aver_time[11], imbalance[11]);
     printf ("\n");
 }
@@ -541,7 +540,7 @@ void zero_vec_nb(Vec_nb* ptr_nonbonded)
 }
 
 void virial_vec_nb(const double rxij, const double ryij, const double rzij,
-                    const Vec_nb* ptr_nonbonded, double** virial)
+                    const Vec_nb* ptr_nonbonded, double virial[DIM][DIM])
 {
     double fxij, fyij, fzij;
 
@@ -571,7 +570,7 @@ void virial_vec_nb(const double rxij, const double ryij, const double rzij,
 
 void compute_erf_vdw(double rxij, double ryij, double rzij, double rij2,
                      double c6, double c12, double width,
-                     double* potential, double** virial, Vec_nb* ptr_nonbonded)
+                     double* potential, double virial[DIM][DIM], Vec_nb* ptr_nonbonded)
 {
     double rij6, rij12, cr12, cr6, rR, erf_rR, rij, vij, fij;
     rij = sqrt(rij2);
@@ -619,7 +618,7 @@ void compute_erf_vdw(double rxij, double ryij, double rzij, double rij2,
 
 void compute_morse(double rxij, double ryij, double rzij, double rij2,
                    double morse_D, double morse_a, double morse_R,
-                   double* potential, double** virial, Vec_nb* ptr_nonbonded)
+                   double* potential, double virial[DIM][DIM], Vec_nb* ptr_nonbonded)
 {
     double fij, rij, exp__ar, exp__2ar;
     rij  = sqrt(rij2);
@@ -654,7 +653,7 @@ void compute_morse(double rxij, double ryij, double rzij, double rij2,
 
 void compute_buckingham(double rxij, double ryij, double rzij, double rij2,
                         double buck_A, double buck_B, double c6,
-                        double* potential, double** virial, Vec_nb* ptr_nonbonded)
+                        double* potential, double virial[DIM][DIM], Vec_nb* ptr_nonbonded)
 {
     double rij6, rij8, rij, exp__Br, fij;
     rij  = sqrt(rij2);
@@ -692,7 +691,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
                        RunSet& s_runset, double scaleLJ, double scaleQQ,
                        int is_14_pair,
                        double c6, double c12, double qi, double qj,
-                       double* potential, double** virial, Vec_nb* ptr_nonbonded)
+                       double* potential, double virial[DIM][DIM], Vec_nb* ptr_nonbonded)
 {
     double rij6, rij12, rij, fij;
     double f_r, f_c, erfc_arij;
@@ -803,7 +802,7 @@ void compute_nonbonded(double rxij, double ryij, double rzij, double rij2,
 Vec_2 compute_bond_1(double rxi, double ryi, double rzi, 
                      double rxj, double ryj, double rzj,
                      double b0, double kb, 
-                     double* box, double* potential, double** virial)
+                     double* box, double* potential, double virial[DIM][DIM])
 {
     Vec_2 bond_force;
     double rxij, ryij, rzij, rij, fij;
@@ -848,7 +847,7 @@ Vec_2 compute_bond_1(double rxi, double ryi, double rzi,
 Vec_2 compute_bond_3(double rxi, double ryi, double rzi,
                      double rxj, double ryj, double rzj,
                      double b0, double D, double beta, 
-                     double* box, double* potential, double** virial)
+                     double* box, double* potential, double virial[DIM][DIM])
 {
     Vec_2 bond_force;
     double rxij, ryij, rzij, rij, fij;
@@ -938,7 +937,7 @@ Vec_3 compute_angle_1(double rxi, double ryi, double rzi,
                       double rxj, double ryj, double rzj,
                       double rxk, double ryk, double rzk,
                       double a0, double ka,
-                      double *box, double *potential, double **virial)
+                      double *box, double *potential, double virial[DIM][DIM])
 {
     Vec_3 angle_force;
     Vec_R r21, r21_unit, r32, r32_unit;
@@ -1004,7 +1003,7 @@ Vec_3 compute_angle_5(double rxi, double ryi, double rzi,
                       double rxk, double ryk, double rzk,
                       double a0, double ka,
                       double b0_ub, double kb_ub,
-                      double* box, double* potential, double** virial)
+                      double* box, double* potential, double virial[DIM][DIM])
 {
     Vec_3 angle_force;
     angle_force = compute_angle_1(rxi, ryi, rzi,
@@ -1084,7 +1083,7 @@ Vec_4 compute_dihedral_3(double rxi, double ryi, double rzi,
                          double rxl, double ryl, double rzl,
                          double c0, double c1, double c2, 
                          double c3, double c4, double c5,
-                         double *box, double *potential, double **virial)
+                         double *box, double *potential, double virial[DIM][DIM])
 {
     Vec_R  r21, r32, r43, r21_unit, r32_unit, r43_unit;
     double r21_d, r32_d, r43_d;
@@ -1219,7 +1218,7 @@ Vec_4 compute_dihedral_9(double rxi, double ryi, double rzi,
                          double rxk, double ryk, double rzk,
                          double rxl, double ryl, double rzl,
                          double phi0, double kphi, int n,
-                         double *box, double *potential, double **virial)
+                         double *box, double *potential, double virial[DIM][DIM])
 {
     double c0, c1, c2, c3, c4, c5;
     Vec_4 dihedral_force;
@@ -1525,7 +1524,7 @@ void mpi_nonb_pair(Topol& s_topol, Task& s_task, Atom_Info* atom_info,
 //=============================================================
 
 void zero_force_pot_vir(int nAtoms, double* fx, double* fy, double* fz,
-                        double* potential, double** virial)
+                        double* potential, double virial[DIM][DIM])
 {
     // zero force
     int i, j;
@@ -2063,7 +2062,7 @@ void rattle_2nd(double dt, Mol_Info* mol_info, Atom_Info* atom_info,
 
 void mpi_force(Task& s_task, Topol& s_topol,
                Atom_Info* atom_info, Mol_Info* mol_info, 
-               RunSet& s_runset, Metal& s_metal, System& s_system, Bicgstab *p_bicgstab,
+               RunSet& s_runset, Metal& s_metal, System& s_system, Bicgstab& s_bicgstab,
                int my_id, int num_procs, double** time_used)
 {
     double rCut2 = s_runset.rCut2;
@@ -2178,7 +2177,7 @@ void mpi_force(Task& s_task, Topol& s_topol,
             // solve Ax=b
             // using preconditioned BiCGSTAB
             mpi_precon_bicg_stab_COO(s_task, s_metal, n_mat, 
-                                     my_id, num_procs, count_nnz, p_bicgstab);
+                                     my_id, num_procs, count_nnz, s_bicgstab);
 
             // at the end of mpi_bicg_stab each proc has a copy of s_metal.vec_pq
 

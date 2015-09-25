@@ -38,6 +38,9 @@
 /// number of potential energy terms
 #define N_POT 15
 
+/// number of Nose-Hoover chains
+#define N_NHC 10
+
 /// maximal length of string
 #define MAX_STR_LEN 256
 
@@ -217,9 +220,9 @@ typedef struct {
 typedef struct {
     /// \name General settings
     ///@{
-    char run_type[MAX_STR_LEN], ensemble[MAX_STR_LEN];
-    //char vdw_type[MAX_STR_LEN], coulomb_type[MAX_STR_LEN];
-    std::string vdw_type = "shifted";
+    std::string run_type     = "md";
+    std::string ensemble     = "nvt";
+    std::string vdw_type     = "shifted";
     std::string coulomb_type = "wolf_sum";
     int  use_vdw, use_coulomb;
     ///@}
@@ -367,7 +370,10 @@ typedef struct {
 typedef struct {
     /// \name simulation box
     ///@{
-    double *box;
+    // rectangular box only.
+    // "s_system.box" has six elements
+    // box_x, box_y, box_z, 0.5 * box_x, 0.5 * box_y, 0.5 * box_z
+    double box[DIM * 2];
     double volume, inv_volume;
     ///@}
 
@@ -400,14 +406,14 @@ typedef struct {
 
     /// \name virial
     ///@{
-    double **virial, **partial_vir;
+    double virial[DIM][DIM], partial_vir[DIM][DIM];
     ///@}
 
     /// \name temperature & pressure coupling
     ///@{
     double eKsum, qMass, pMass, vP;
-    double *vQ, *aQ;
-    int    num_nhc;
+    double vQ[N_NHC], aQ[N_NHC];
+    int    num_nhc = N_NHC;
     double first_temp, ext_temp, inst_temp, inst_pres;
     double pressure[3];
     int    ndf;

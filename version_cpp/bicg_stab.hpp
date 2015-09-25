@@ -47,4 +47,4 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 
 void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
                               int my_id, int num_procs,
-                              long int count_nnz, Bicgstab *p_bicgstab);
+                              long int count_nnz, Bicgstab& s_bicgstab);

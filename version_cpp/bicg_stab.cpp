@@ -32,7 +32,6 @@
 #include <vector>
 
 #include "typedef.hpp"
-#include "my_malloc.hpp"
 #include "file.hpp"
 #include "cpff.hpp"
 
@@ -242,7 +241,7 @@ void mpi_comm_vec(int start_metal, int end_metal, int min_metal, int max_metal, 
 
 void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
                               int my_id, int num_procs,
-                              long int count_nnz, Bicgstab *p_bicgstab)
+                              long int count_nnz, Bicgstab& s_bicgstab)
 {
     int start_metal = s_task.start_metal[my_id];
     int end_metal   = s_task.end_metal[my_id];
@@ -262,17 +261,17 @@ void mpi_precon_bicg_stab_COO(Task& s_task, Metal& s_metal, int n_mat,
     
     // At the beginning, each processor already has a copy of vec_pq
 
-    double* Ax = p_bicgstab->Ax;
-    double* r0 = p_bicgstab->r0;
-    double* r  = p_bicgstab->r;
-    double* p  = p_bicgstab->p;
-    double* v  = p_bicgstab->v;
-    double* s  = p_bicgstab->s;
-    double* t  = p_bicgstab->t;
-    double* y  = p_bicgstab->y;
-    double* z  = p_bicgstab->z;
-    double* Kt = p_bicgstab->Kt;
-    double* K  = p_bicgstab->K;
+    double* Ax = s_bicgstab.Ax;
+    double* r0 = s_bicgstab.r0;
+    double* r  = s_bicgstab.r;
+    double* p  = s_bicgstab.p;
+    double* v  = s_bicgstab.v;
+    double* s  = s_bicgstab.s;
+    double* t  = s_bicgstab.t;
+    double* y  = s_bicgstab.y;
+    double* z  = s_bicgstab.z;
+    double* Kt = s_bicgstab.Kt;
+    double* K  = s_bicgstab.K;
 
     double rho_old = 1.0;
     double omega = 1.0;
